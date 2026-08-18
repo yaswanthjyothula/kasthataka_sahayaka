@@ -41,16 +41,16 @@ export default function HealthBadge() {
   }, []);
 
   return (
-    <div className="bg-agri-card border border-agri-700/40 rounded-xl p-4 shadow-lg flex flex-col gap-3">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-agri-500 animate-pulse" />
-          <span className="font-semibold text-sm text-gray-200">Backend Connectivity</span>
+          <Activity className="w-5 h-5 text-emerald-600 animate-pulse" />
+          <span className="font-semibold text-sm text-slate-800">Backend Connectivity</span>
         </div>
         <button
           onClick={checkHealth}
           disabled={loading}
-          className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors disabled:opacity-50"
+          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors disabled:opacity-50"
           title="Re-check Health"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -58,27 +58,27 @@ export default function HealthBadge() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-950/30 p-2.5 rounded-lg border border-amber-800/40">
+        <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>Testing `/api/v1/health` connection...</span>
         </div>
       ) : error ? (
-        <div className="flex items-center gap-2 text-xs text-red-400 bg-red-950/30 p-2.5 rounded-lg border border-red-800/40">
+        <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 p-2.5 rounded-lg border border-red-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>Offline/Disconnected ({error})</span>
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5 bg-agri-900/30 p-2.5 rounded-lg border border-agri-600/30 text-xs">
-          <div className="flex items-center gap-2 text-agri-500 font-medium">
-            <CheckCircle2 className="w-4 h-4 text-agri-500" />
+        <div className="flex flex-col gap-1.5 bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-200 text-xs">
+          <div className="flex items-center gap-2 text-emerald-700 font-semibold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Connected to FastAPI Backend</span>
           </div>
           {health && (
-            <div className="grid grid-cols-2 gap-1 text-[11px] text-gray-400 mt-1 pl-6">
-              <div>App: <span className="text-gray-200">{health.app}</span></div>
-              <div>Version: <span className="text-gray-200">{health.version}</span></div>
-              <div>Status: <span className="text-agri-400 uppercase font-mono">{health.status}</span></div>
-              <div>Env: <span className="text-gray-200">{health.environment}</span></div>
+            <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 mt-1 pl-6">
+              <div>App: <span className="text-slate-900 font-medium">{health.app}</span></div>
+              <div>Version: <span className="text-slate-900 font-medium">{health.version}</span></div>
+              <div>Status: <span className="text-emerald-700 uppercase font-mono font-bold">{health.status}</span></div>
+              <div>Env: <span className="text-slate-900 font-medium">{health.environment}</span></div>
             </div>
           )}
         </div>
