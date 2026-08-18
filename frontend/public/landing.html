@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<title>Kasthataka Sahayaka — Digital Oasis</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+		*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+		html, body {
+			width: 100%;
+			min-height: 100%;
+			background: #000;
+			overflow-x: hidden;
+			font-family: 'Inter', system-ui, sans-serif;
+			color: #e8ece4;
+		}
+
+		canvas {
+			position: fixed;
+			top: 0; left: 0;
+			width: 100vw; height: 100vh;
+			z-index: 0;
+		}
+
+		#scroll-container {
+			position: relative;
+			z-index: 1;
+			pointer-events: none;
+			will-change: transform;
+		}
+
+		.section {
+			position: relative;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 80px 40px;
+			pointer-events: none;
+		}
+
+		.section * { pointer-events: auto; }
+
+		.hero {
+			min-height: 100vh;
+			flex-direction: column;
+			gap: 20px;
+			text-align: left;
+			align-items: flex-start;
+			justify-content: center;
+			padding-top: 0;
+			padding-left: clamp(24px, 8vw, 120px);
+			padding-right: clamp(24px, 8vw, 120px);
+		}
+
+		.hero-tag {
+			font-size: 11px;
+			letter-spacing: 4px;
+			text-transform: uppercase;
+			opacity: 0;
+			transform: translateY(30px);
+			color: var(--color-label, rgba(210, 230, 160, 0.85));
+			font-weight: 500;
+			text-shadow: 0 1px 16px rgba(0,0,0,0.5);
+		}
+
+		.hero h1 {
+			font-family: 'Playfair Display', serif;
+			font-size: clamp(48px, 8vw, 110px);
+			font-weight: 400;
+			line-height: 1.05;
+			letter-spacing: -1px;
+			opacity: 0;
+			transform: translateY(40px);
+			color: var(--color-heading, #f8fcf0);
+			text-shadow: 0 2px 30px rgba(0,0,0,0.6), 0 0px 80px rgba(0,0,0,0.4);
+		}
+
+		.hero h1 em {
+			font-style: italic;
+			color: var(--color-accent, rgba(230, 245, 120, 0.95));
+			text-shadow: 0 0 30px rgba(230, 245, 120, 0.25), 0 0 60px rgba(230, 245, 120, 0.1);
+		}
+
+		.hero-sub {
+			font-size: clamp(14px, 1.5vw, 18px);
+			line-height: 1.7;
+			max-width: 520px;
+			opacity: 0;
+			transform: translateY(30px);
+			color: var(--color-body, rgba(215, 230, 190, 0.7));
+			font-weight: 300;
+		}
+
+		.wind-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 10px 24px;
+			border: 1px solid rgba(180, 210, 140, 0.25);
+			border-radius: 32px;
+			background: rgba(15, 25, 15, 0.35);
+			backdrop-filter: blur(12px);
+			color: var(--color-accent, rgba(230, 245, 120, 0.9));
+			font-size: 12px;
+			font-weight: 500;
+			letter-spacing: 1.5px;
+			text-transform: uppercase;
+			cursor: pointer;
+			transition: all 0.4s;
+			opacity: 0;
+			transform: translateY(20px);
+		}
+
+		.wind-btn:hover {
+			background: rgba(40, 65, 40, 0.5);
+			border-color: rgba(180, 210, 140, 0.5);
+			transform: translateY(-2px) !important;
+		}
+
+		.scroll-hint {
+			position: absolute;
+			bottom: 40px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 8px;
+			opacity: 0;
+		}
+
+		/* Scroll snapping */
+		html {
+			scroll-snap-type: y proximity;
+		}
+
+		.section {
+			scroll-snap-align: start;
+		}
+
+		.scroll-hint span {
+			font-size: 10px;
+			letter-spacing: 3px;
+			text-transform: uppercase;
+			color: var(--color-label, rgba(230, 245, 160, 0.9));
+			text-shadow: 0 1px 12px rgba(0,0,0,0.7), 0 0 24px rgba(0,0,0,0.5);
+		}
+
+		.scroll-line {
+			width: 1px;
+			height: 40px;
+			background: linear-gradient(to bottom, rgba(180, 210, 160, 0.5), transparent);
+			animation: scrollPulse 2s ease-in-out infinite;
+		}
+
+		@keyframes scrollPulse {
+			0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
+			50% { opacity: 1; transform: scaleY(1); }
+		}
+
+		.disease-section {
+			flex-direction: column;
+			gap: 30px;
+			text-align: center;
+			max-width: 1200px;
+			margin: 0 auto;
+			width: 100%;
+		}
+
+		.disease-grid-header {
+			opacity: 0;
+			transform: translateY(20px);
+			text-align: center;
+		}
+
+		.disease-grid-header span {
+			font-size: 11px;
+			letter-spacing: 4px;
+			text-transform: uppercase;
+			color: rgba(210, 230, 160, 0.85);
+			font-weight: 500;
+		}
+
+		.disease-grid-header h2 {
+			font-family: 'Playfair Display', serif;
+			font-size: clamp(24px, 3.5vw, 42px);
+			font-weight: 400;
+			color: #f8fcf0;
+			margin-top: 6px;
+		}
+
+		.disease-grid {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			grid-template-rows: repeat(2, auto);
+			gap: 20px;
+			width: 100%;
+			max-width: 1140px;
+			margin: 0 auto;
+		}
+
+		@media (max-width: 1024px) {
+			.disease-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		@media (max-width: 580px) {
+			.disease-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		.disease-card {
+			border: 1px solid rgba(120, 190, 90, 0.25);
+			border-radius: 18px;
+			padding: 24px 20px;
+			background: linear-gradient(135deg, rgba(14, 38, 16, 0.75) 0%, rgba(8, 24, 10, 0.85) 100%);
+			backdrop-filter: blur(16px);
+			opacity: 0;
+			transform: translateY(30px);
+			transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+			text-align: left;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.disease-card:hover {
+			border-color: rgba(160, 230, 110, 0.5);
+			background: linear-gradient(135deg, rgba(22, 54, 25, 0.85) 0%, rgba(12, 34, 15, 0.9) 100%);
+			transform: translateY(-4px) !important;
+			box-shadow: 0 12px 40px rgba(40, 90, 30, 0.25);
+		}
+
+		.disease-badge {
+			font-size: 10px;
+			letter-spacing: 1.5px;
+			text-transform: uppercase;
+			color: rgba(180, 240, 100, 0.9);
+			background: rgba(30, 70, 30, 0.5);
+			border: 1px solid rgba(140, 210, 90, 0.3);
+			padding: 3px 10px;
+			border-radius: 12px;
+			width: fit-content;
+			font-weight: 600;
+		}
+
+		.disease-card h3 {
+			font-family: 'Playfair Display', serif;
+			font-size: 18px;
+			font-weight: 400;
+			color: #f8fcf2;
+			line-height: 1.2;
+		}
+
+		.disease-card p {
+			font-size: 12px;
+			line-height: 1.6;
+			color: rgba(215, 235, 190, 0.7);
+			font-weight: 300;
+		}
+
+		.pillars {
+			flex-direction: column;
+			gap: 60px;
+		}
+
+		.pillars-header {
+			text-align: center;
+			opacity: 0;
+			transform: translateY(20px);
+		}
+
+		.pillars-header span {
+			font-size: 10px;
+			letter-spacing: 4px;
+			text-transform: uppercase;
+			color: var(--color-label, rgba(210, 230, 160, 0.55));
+		}
+
+		.pillar-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 30px;
+			max-width: 960px;
+			width: 100%;
+		}
+
+		@media (max-width: 768px) {
+			.pillar-grid { grid-template-columns: 1fr; max-width: 400px; }
+		}
+
+		.pillar-card {
+			border: 1px solid rgba(140, 180, 120, 0.12);
+			border-radius: 16px;
+			padding: 36px 28px;
+			background: rgba(10, 18, 10, 0.55);
+			backdrop-filter: blur(16px);
+			opacity: 0;
+			transform: translateY(40px);
+			transition: border-color 0.4s, background 0.4s;
+			box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+		}
+
+		.pillar-card:hover {
+			border-color: rgba(140, 180, 120, 0.3);
+			background: rgba(20, 35, 20, 0.45);
+		}
+
+		.pillar-num {
+			font-size: 11px;
+			letter-spacing: 2px;
+			color: var(--color-accent, rgba(230, 245, 120, 0.65));
+			margin-bottom: 16px;
+			font-weight: 500;
+		}
+
+		.pillar-card h3 {
+			font-family: 'Playfair Display', serif;
+			font-size: 22px;
+			font-weight: 400;
+			margin-bottom: 12px;
+			color: var(--color-heading, #f8fcf2);
+			text-shadow: 0 1px 12px rgba(0,0,0,0.4);
+		}
+
+		.pillar-card p {
+			font-size: 13px;
+			line-height: 1.7;
+			color: var(--color-body, rgba(215, 230, 190, 0.6));
+			font-weight: 300;
+		}
+
+		.stats-section {
+			flex-direction: column;
+			gap: 50px;
+			text-align: center;
+		}
+
+		.stats-label {
+			font-size: 10px;
+			letter-spacing: 4px;
+			text-transform: uppercase;
+			color: var(--color-label, rgba(210, 230, 160, 0.55));
+			opacity: 0;
+			transform: translateY(20px);
+			text-shadow: 0 1px 12px rgba(0,0,0,0.5);
+		}
+
+		.stats-grid {
+			display: flex;
+			gap: 60px;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.stat-item {
+			opacity: 0;
+			transform: translateY(30px);
+			text-align: center;
+		}
+
+		.stat-num {
+			font-family: 'Playfair Display', serif;
+			font-size: clamp(40px, 5vw, 64px);
+			font-weight: 400;
+			color: var(--color-accent, rgba(235, 250, 130, 1));
+			line-height: 1;
+			text-shadow: 0 2px 24px rgba(0,0,0,0.6), 0 0 40px rgba(230, 245, 120, 0.15);
+		}
+
+		.stat-unit {
+			font-size: 14px;
+			letter-spacing: 1px;
+			color: var(--color-body, rgba(215, 230, 190, 0.55));
+			margin-top: 8px;
+			font-weight: 300;
+		}
+
+		.quote-section {
+			flex-direction: column;
+			gap: 20px;
+			text-align: center;
+			min-height: 80vh;
+		}
+
+		.quote-section blockquote {
+			font-family: 'Playfair Display', serif;
+			font-size: clamp(22px, 3.5vw, 42px);
+			font-weight: 400;
+			font-style: italic;
+			line-height: 1.4;
+			max-width: 720px;
+			color: var(--color-heading, rgba(250, 255, 240, 0.95));
+			opacity: 0;
+			transform: translateY(40px);
+			text-shadow: 0 2px 30px rgba(0,0,0,0.7), 0 0 60px rgba(0,0,0,0.4);
+		}
+
+		.quote-attr {
+			font-size: 12px;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			color: var(--color-label, rgba(210, 230, 160, 0.45));
+			opacity: 0;
+			transform: translateY(20px);
+		}
+
+		.cta-section {
+			flex-direction: column;
+			gap: 30px;
+			text-align: center;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			padding: 0 40px;
+			margin-bottom: 0;
+		}
+
+		.cta-section h2 {
+			font-family: 'Playfair Display', serif;
+			font-size: clamp(32px, 5vw, 60px);
+			font-weight: 400;
+			line-height: 1.2;
+			opacity: 0;
+			transform: translateY(30px);
+			text-align: center;
+		}
+
+		.cta-section h2 em {
+			font-style: italic;
+			color: var(--color-accent, rgba(235, 250, 130, 1));
+			text-shadow: 0 0 30px rgba(230, 245, 120, 0.3), 0 0 60px rgba(230, 245, 120, 0.12);
+		}
+
+		.cta-sub {
+			font-size: 15px;
+			color: var(--color-body, rgba(215, 230, 190, 0.6));
+			max-width: 420px;
+			line-height: 1.7;
+			font-weight: 300;
+			opacity: 0;
+			transform: translateY(20px);
+		}
+
+		.cta-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			padding: 14px 36px;
+			border: 1px solid rgba(180, 210, 140, 0.35);
+			border-radius: 40px;
+			background: rgba(30, 50, 30, 0.4);
+			color: var(--color-accent, rgba(230, 245, 120, 0.95));
+			font-size: 13px;
+			font-weight: 500;
+			letter-spacing: 1.5px;
+			text-transform: uppercase;
+			text-decoration: none;
+			cursor: pointer;
+			transition: all 0.4s;
+			opacity: 0;
+			transform: translateY(20px);
+			backdrop-filter: blur(10px);
+		}
+
+		.cta-btn:hover {
+			background: rgba(50, 80, 50, 0.5);
+			border-color: rgba(180, 210, 140, 0.6);
+			transform: translateY(-2px) !important;
+		}
+
+		.site-footer {
+			position: relative;
+			z-index: 2;
+			border-top: 1px solid rgba(140, 180, 120, 0.08);
+			background: #000000;
+			padding: 50px 20px 40px;
+			margin-top: 0;
+			text-align: center;
+		}
+
+		.site-footer-inner {
+			max-width: 600px;
+			margin: 0 auto;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 14px;
+			text-align: center;
+		}
+
+		.sf-brand {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 12px;
+			text-align: center;
+		}
+
+		.sf-brand-name {
+			font-family: 'Playfair Display', serif;
+			font-size: 26px;
+			color: var(--color-heading, rgba(240, 250, 220, 0.95));
+			letter-spacing: 1px;
+			text-align: center;
+		}
+
+		.sf-brand-desc {
+			font-size: 13px;
+			line-height: 1.7;
+			color: var(--color-body, rgba(215, 230, 190, 0.65));
+			font-weight: 300;
+			max-width: 500px;
+			margin: 0 auto;
+			text-align: center;
+		}
+
+		.sf-bottom {
+			max-width: 600px;
+			margin: 24px auto 0;
+			padding-top: 20px;
+			border-top: 1px solid rgba(140, 180, 120, 0.08);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+		}
+
+		.sf-copy {
+			font-size: 11px;
+			color: var(--color-body, rgba(215, 230, 190, 0.25));
+			letter-spacing: 0.5px;
+		}
+
+		.sf-socials {
+			display: flex;
+			gap: 18px;
+		}
+
+		.sf-socials a {
+			font-size: 11px;
+			color: var(--color-body, rgba(215, 230, 190, 0.35));
+			text-decoration: none;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			transition: color 0.3s;
+		}
+
+		.sf-socials a:hover { color: var(--color-accent, rgba(230, 245, 120, 0.9)); }
+
+		/* Nav (floating) */
+		.nav-float {
+			position: fixed;
+			top: 24px;
+			left: 0;
+			right: 0;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 0 40px;
+			z-index: 100;
+			pointer-events: none;
+			opacity: 1;
+			transition: opacity 0.6s;
+		}
+
+		.nav-logo {
+			font-family: 'Playfair Display', serif;
+			font-size: 18px;
+			color: var(--color-heading, rgba(245, 250, 230, 0.9));
+			letter-spacing: 1px;
+			pointer-events: auto;
+		}
+
+		.nav-links {
+			display: flex;
+			gap: 28px;
+			pointer-events: auto;
+		}
+
+		.nav-links a {
+			font-size: 11px;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			color: var(--color-body, rgba(215, 230, 190, 0.65));
+			text-decoration: none;
+			transition: color 0.3s;
+			font-weight: 500;
+		}
+
+		.nav-links a:hover { color: var(--color-accent, rgba(230, 245, 120, 0.95)); }
+
+		.nav-dashboard-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 8px 20px;
+			border: 1px solid rgba(160, 230, 110, 0.4);
+			border-radius: 24px;
+			background: rgba(25, 55, 25, 0.6);
+			color: rgba(230, 245, 140, 0.95) !important;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 1.5px;
+			text-transform: uppercase;
+			text-decoration: none;
+			backdrop-filter: blur(10px);
+			transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.nav-dashboard-btn:hover {
+			background: rgba(45, 85, 45, 0.8) !important;
+			border-color: rgba(180, 245, 120, 0.7) !important;
+			color: #ffffff !important;
+			box-shadow: 0 4px 20px rgba(40, 90, 30, 0.4);
+			transform: translateY(-1px);
+		}
+
+		.nav-hamburger {
+			display: none;
+			pointer-events: auto;
+			width: 36px;
+			height: 36px;
+			background: rgba(15, 25, 15, 0.4);
+			backdrop-filter: blur(12px);
+			border: 1px solid rgba(140, 180, 120, 0.15);
+			border-radius: 8px;
+			cursor: pointer;
+			position: relative;
+			flex-shrink: 0;
+			transition: background 0.3s, border-color 0.3s;
+		}
+
+		.nav-hamburger span {
+			position: absolute;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 16px;
+			height: 1.5px;
+			background: var(--color-body, rgba(215, 230, 190, 0.7));
+			border-radius: 1px;
+			transition: transform 0.3s, opacity 0.3s;
+		}
+
+		.nav-hamburger span:nth-child(1) { top: 10px; }
+		.nav-hamburger span:nth-child(2) { top: 17px; }
+		.nav-hamburger span:nth-child(3) { top: 24px; }
+
+		.progress-bar {
+			position: fixed;
+			top: 0; left: 0;
+			height: 2px;
+			background: rgba(230, 245, 120, 0.6);
+			z-index: 200;
+			width: 0;
+			transition: width 0.1s linear;
+		}
+
+		.revealed {
+			opacity: 1 !important;
+			transform: translateY(0) !important;
+			transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+						transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.delay-1 { transition-delay: 0.1s !important; }
+		.delay-2 { transition-delay: 0.25s !important; }
+		.delay-3 { transition-delay: 0.4s !important; }
+		.delay-4 { transition-delay: 0.55s !important; }
+	</style>
+
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://unpkg.com/three@0.183.0/build/three.webgpu.js",
+				"three/webgpu": "https://unpkg.com/three@0.183.0/build/three.webgpu.js",
+				"three/tsl": "https://unpkg.com/three@0.183.0/build/three.tsl.js",
+				"three/addons/": "https://unpkg.com/three@0.183.0/examples/jsm/"
+			}
+		}
+	</script>
+</head>
+
+<body>
+	<div class="progress-bar" id="progressBar"></div>
+
+	<nav class="nav-float" id="navFloat">
+		<div class="nav-logo">Kasthataka Sahayaka</div>
+		<div class="nav-links">
+			<a href="/dashboard" class="nav-dashboard-btn">Dashboard →</a>
+		</div>
+		<button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+			<span></span><span></span><span></span>
+		</button>
+	</nav>
+
+	<div id="scroll-container">
+		<section class="section hero" id="heroSection" data-stage="0">
+			<span class="hero-tag" data-reveal data-delay="1">Rooted in Tradition, Powered by Tech</span>
+			<h1 data-reveal data-delay="2">Field<br><em>Intelligence</em></h1>
+			<p class="hero-sub" data-reveal data-delay="3">Real-time disease detection and smart advisory to safeguard your yield.</p>
+
+			<div class="scroll-hint" data-reveal data-delay="4">
+				<span>Explore</span>
+				<div class="scroll-line"></div>
+			</div>
+		</section>
+
+		<section class="section disease-section" id="manifestoSection" data-stage="1">
+			<div class="disease-grid-header" data-reveal>
+				<span>Crop Protection Intelligence</span>
+				<h2>8 Disease Classes & Health Analytics</h2>
+			</div>
+			<div class="disease-grid">
+				<div class="disease-card" data-reveal data-delay="1">
+					<span class="disease-badge">Foliar</span>
+					<h3>Leaf Blast</h3>
+					<p>Spindle-shaped necrotic lesions with grey centers on leaf blades causing early defoliation.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="2">
+					<span class="disease-badge">Panicle</span>
+					<h3>Neck Blast</h3>
+					<p>Blackened rot at the peduncle neck junction leading to panicle breakage and sterile grains.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="3">
+					<span class="disease-badge">Spikelet</span>
+					<h3>Finger Blast</h3>
+					<p>Direct finger & spikelet discoloration obstructing nutrient flow during grain filling.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="4">
+					<span class="disease-badge">Basal</span>
+					<h3>Foot Rot</h3>
+					<p>Stem base collar rot and root damping-off caused by soil-borne fungal pathogens.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="1">
+					<span class="disease-badge">Spots</span>
+					<h3>Brown Leaf Spot</h3>
+					<p>Oval reddish-brown necrotic spots coalescing across lower and middle leaves.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="2">
+					<span class="disease-badge">Spore</span>
+					<h3>Smut Disease</h3>
+					<p>Ovaries converted into dark powdery soral galls reducing grain yield viability.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="3">
+					<span class="disease-badge">Tip Blight</span>
+					<h3>Cercospora Spot</h3>
+					<p>Narrow elongated leaf tip blights reducing canopy photosynthetic efficiency.</p>
+				</div>
+				<div class="disease-card" data-reveal data-delay="4">
+					<span class="disease-badge">Optimal</span>
+					<h3>Healthy Field</h3>
+					<p>Optimal green canopy status with zero necrotic lesion area and strong turgor.</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="section pillars" id="pillarsSection" data-stage="2">
+			<div class="pillars-header" data-reveal>
+				<span>Three Step Setup</span>
+				<h2 style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 3.5vw, 40px); font-weight: 400; color: #f8fcf0; margin-top: 6px;">Seamless Field Workflow</h2>
+			</div>
+			<div class="pillar-grid">
+				<div class="pillar-card" data-reveal data-delay="1">
+					<div class="pillar-num">01</div>
+					<h3>Capture &amp; Quality Gate</h3>
+					<p>1-tap leaf photo capture with real-time OpenCV.js blur variance quality check (&gt;100 threshold) and offline IndexedDB queue.</p>
+				</div>
+				<div class="pillar-card" data-reveal data-delay="2">
+					<div class="pillar-num">02</div>
+					<h3>AI Vision &amp; Score-CAM</h3>
+					<p>Instant vision model ensemble diagnosis across 8 disease classes, 4-tier necrotic area severity grading, and heatmap overlays.</p>
+				</div>
+				<div class="pillar-card" data-reveal data-delay="3">
+					<div class="pillar-num">03</div>
+					<h3>CIBRC Advisory &amp; Voice</h3>
+					<p>Generative Qdrant RAG advisory backed by deterministic CIBRC safety guardrails, tank-mix knapsack calculations, and voice support.</p>
+				</div>
+			</div>
+		</section>
+
+
+
+		<section class="section quote-section" data-stage="4">
+			<blockquote data-reveal>"The earth does not belong to us. We belong to the earth — and our code should reflect that truth."</blockquote>
+			<span class="quote-attr" data-reveal data-delay="1">— Lena Ashford, Founder</span>
+		</section>
+
+		<section class="section cta-section" id="ctaSection" data-stage="5">
+			<h2 data-reveal>Step into<br>the <em>Oasis</em></h2>
+			<p class="cta-sub" data-reveal data-delay="1">Join a growing collective of builders, dreamers, and stewards crafting a world worth inheriting.</p>
+			<a href="#heroSection" class="cta-btn" data-reveal data-delay="2">Begin Your Journey →</a>
+		</section>
+	</div>
+
+	<footer class="site-footer">
+		<div class="site-footer-inner">
+			<div class="sf-brand">
+				<div class="sf-brand-name">Kasthataka Sahayaka</div>
+				<p class="sf-brand-desc">A sanctuary for sustainable minds building a regenerative future where technology meets the earth.</p>
+			</div>
+		</div>
+		<div class="sf-bottom">
+			<span class="sf-copy">© 2026 Kasthataka Sahayaka. All rights reserved.</span>
+		</div>
+	</footer>
+
+	<script type="module">
+		import * as THREE from 'three/webgpu';
+		import {
+			Fn, uniform, float, vec3, instancedArray, instanceIndex, uv,
+			positionGeometry, positionWorld, sin, cos, pow, smoothstep, mix,
+			sqrt, select, hash, time, deltaTime, PI, mx_noise_float,
+			pass, mrt, output, transformedNormalView,
+		} from 'three/tsl';
+
+		const BLADE_COUNT = 120000;
+		const FIELD_SIZE = 32;
+		const BACKGROUND_HEX = '#030a05';
+		const GROUND_HEX = '#051206';
+		const BLADE_BASE_HEX = '#041005';
+		const BLADE_TIP_HEX = '#9bbd2b';
+
+		// ─── Sky Gradient ──────────────────────────────────────────────────
+		function buildSkyTexture() {
+			const w = 2, h = 512;
+			const canvas = document.createElement('canvas');
+			canvas.width = w; canvas.height = h;
+			const ctx = canvas.getContext('2d');
+			const grad = ctx.createLinearGradient(0, 0, 0, h);
+			grad.addColorStop(0.0, '#020804');
+			grad.addColorStop(0.35, '#08170c');
+			grad.addColorStop(0.70, '#122c16');
+			grad.addColorStop(1.0, '#1f401c');
+			ctx.fillStyle = grad;
+			ctx.fillRect(0, 0, w, h);
+			const tex = new THREE.CanvasTexture(canvas);
+			tex.mapping = THREE.EquirectangularReflectionMapping;
+			tex.colorSpace = THREE.SRGBColorSpace;
+			tex.needsUpdate = true;
+			return tex;
+		}
+
+		// ─── Scene ─────────────────────────────────────────────────────────
+		const scene = new THREE.Scene();
+		scene.background = buildSkyTexture();
+		scene.fog = new THREE.FogExp2('#0c2011', 0.026);
+
+		const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+		const targetCamPos = new THREE.Vector3(0, 7.5, 17.5);
+		const currentCamPos = new THREE.Vector3(0, 7.5, 17.5);
+		const targetLookAt = new THREE.Vector3(0, 0, 0);
+		const currentLookAt = new THREE.Vector3(0, 0, 0);
+
+		camera.position.copy(currentCamPos);
+		camera.lookAt(currentLookAt);
+
+		const renderer = new THREE.WebGPURenderer({ antialias: true });
+		const maxDPR = Math.min(window.devicePixelRatio, 2);
+		renderer.setPixelRatio(maxDPR);
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		document.body.appendChild(renderer.domElement);
+		await renderer.init();
+
+		// ─── GPU Buffers ────────────────────────────────────────────────────
+		const bladeData = instancedArray(BLADE_COUNT, 'vec4');
+		const bendState = instancedArray(BLADE_COUNT, 'vec4');
+		const bladeBound = instancedArray(BLADE_COUNT, 'float');
+
+		// ─── Uniforms ───────────────────────────────────────────────────────
+		const mouseWorld = uniform(new THREE.Vector3(99999, 0, 99999));
+		const mouseRadius = uniform(6.5);
+		const mouseStrength = uniform(4.2);
+		const grassDensity = uniform(1.0);
+		const windSpeed = uniform(1.2);
+		const windAmplitude = uniform(0.24);
+		const bladeWidth = uniform(4.2);
+		const bladeTipWidth = uniform(0.18);
+		const bladeHeight = uniform(1.65);
+		const bladeHeightVariation = uniform(0.55);
+		const bladeLean = uniform(1.2);
+		const noiseAmplitude = uniform(1.9);
+		const noiseFrequency = uniform(0.28);
+		const bladeBaseColor = uniform(new THREE.Color(BLADE_BASE_HEX));
+		const bladeTipColor = uniform(new THREE.Color(BLADE_TIP_HEX));
+		const goldenTipColor = uniform(new THREE.Color('#d4ba38'));
+		const greenTipColor = uniform(new THREE.Color('#4c8014'));
+		const midColor = uniform(new THREE.Color('#154215'));
+
+		const noise2D = Fn(([x, z]) => mx_noise_float(vec3(x, float(0), z)).mul(0.5).add(0.5));
+
+		// ─── Compute Init ──────────────────────────────────────────────────
+		const computeInit = Fn(() => {
+			const blade = bladeData.element(instanceIndex);
+			const col = instanceIndex.mod(346);
+			const row = instanceIndex.div(346);
+			const jx = hash(instanceIndex).sub(0.5);
+			const jz = hash(instanceIndex.add(7919)).sub(0.5);
+			const wx = col.toFloat().add(jx).div(float(346)).sub(0.5).mul(FIELD_SIZE);
+			const wz = row.toFloat().add(jz).div(float(346)).sub(0.5).mul(FIELD_SIZE);
+			blade.x.assign(wx);
+			blade.y.assign(wz);
+			blade.z.assign(hash(instanceIndex.add(1337)).mul(PI.mul(2)));
+			const n1 = noise2D(wx.mul(noiseFrequency), wz.mul(noiseFrequency));
+			blade.w.assign(n1.mul(noiseAmplitude));
+			const dist = sqrt(wx.mul(wx).add(wz.mul(wz)));
+			bladeBound.element(instanceIndex).assign(select(dist.greaterThan(15.5), float(0), float(1)));
+		})().compute(BLADE_COUNT);
+
+		// ─── Compute Update ────────────────────────────────────────────────
+		const computeUpdate = Fn(() => {
+			const blade = bladeData.element(instanceIndex);
+			const bend = bendState.element(instanceIndex);
+			const bx = blade.x;
+			const bz = blade.y;
+
+			const w1 = sin(bx.mul(0.35).add(bz.mul(0.12)).add(time.mul(windSpeed)));
+			const w2 = sin(bx.mul(0.7).sub(bz.mul(0.4)).add(time.mul(windSpeed.mul(1.4))));
+			const windX = w1.add(w2.mul(0.3)).mul(windAmplitude);
+			const windZ = w1.sub(w2.mul(0.3)).mul(windAmplitude.mul(0.55));
+
+			const lw = deltaTime.mul(4.5).saturate();
+			bend.x.assign(mix(bend.x, windX, lw));
+			bend.y.assign(mix(bend.y, windZ, lw));
+
+			const dx = bx.sub(mouseWorld.x);
+			const dz = bz.sub(mouseWorld.z);
+			const dist = sqrt(dx.mul(dx).add(dz.mul(dz))).add(0.0001);
+			const falloff = float(1).sub(dist.div(mouseRadius).saturate());
+			const influence = falloff.mul(falloff).mul(mouseStrength);
+			const pushX = dx.div(dist).mul(influence);
+			const pushZ = dz.div(dist).mul(influence);
+
+			bend.z.assign(mix(bend.z, pushX, deltaTime.mul(8.5).saturate()));
+			bend.w.assign(mix(bend.w, pushZ, deltaTime.mul(8.5).saturate()));
+		})().compute(BLADE_COUNT);
+
+		// ─── Blade Geometry (7 segments curved geometry) ───────────────────
+		function createBladeGeometry() {
+			const segs = 7, W = 0.062, H = 1.15;
+			const verts = [], norms = [], uvArr = [], idx = [];
+			for (let i = 0; i <= segs; i++) {
+				const t = i / segs;
+				const y = t * H;
+				const hw = W * 0.5 * (1.0 - Math.pow(t, 1.35) * 0.85);
+				const zCurve = Math.sin(t * Math.PI) * 0.018;
+				verts.push(-hw, y, zCurve, hw, y, zCurve);
+				norms.push(0, 0.2, 0.98, 0, 0.2, 0.98);
+				uvArr.push(0, t, 1, t);
+			}
+			for (let i = 0; i < segs; i++) {
+				const b = i * 2;
+				idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
+			}
+			const geo = new THREE.BufferGeometry();
+			geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+			geo.setAttribute('normal', new THREE.Float32BufferAttribute(norms, 3));
+			geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArr, 2));
+			geo.setIndex(idx);
+			return geo;
+		}
+
+		// ─── Grass Material ────────────────────────────────────────────────
+		const grassMat = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide });
+
+		grassMat.positionNode = Fn(() => {
+			const blade = bladeData.element(instanceIndex);
+			const bend = bendState.element(instanceIndex);
+			const worldX = blade.x, worldZ = blade.y, rotY = blade.z;
+			const boundary = bladeBound.element(instanceIndex);
+			const heightScale = float(0.35).add(blade.w).mul(boundary);
+			const taper = float(1).sub(uv().y.mul(float(1).sub(bladeTipWidth)));
+			const lx = positionGeometry.x.mul(bladeWidth).mul(taper);
+			const ly = positionGeometry.y.mul(heightScale).mul(bladeHeight);
+			const cY = cos(rotY), sY = sin(rotY);
+			const rx = lx.mul(cY), rz = lx.mul(sY);
+			const t = uv().y;
+			const bendFactor = pow(t, 2.0);
+			const bendX = bend.x.add(bend.z);
+			const bendZ = bend.y.add(bend.w);
+			const relX = rx.add(bendX.mul(bendFactor).mul(bladeHeight));
+			const relY = ly;
+			const relZ = rz.add(bendZ.mul(bendFactor).mul(bladeHeight));
+			return vec3(worldX.add(relX), relY, worldZ.add(relZ));
+		})();
+
+		grassMat.colorNode = Fn(() => {
+			const t = uv().y;
+			const lowerGrad = smoothstep(float(0.0), float(0.40), t);
+			const upperGrad = smoothstep(float(0.35), float(0.90), t);
+			const lowerColor = mix(bladeBaseColor, midColor, lowerGrad);
+			const vibrantTip = mix(greenTipColor, bladeTipColor, upperGrad);
+			const finalColor = mix(lowerColor, vibrantTip, upperGrad);
+
+			// Soft fog depth blending
+			const blade = bladeData.element(instanceIndex);
+			const dist = sqrt(blade.x.mul(blade.x).add(blade.y.mul(blade.y)));
+			const fogFactor = smoothstep(float(6.0), float(15.0), dist);
+			const fogCol = vec3(float(0.047), float(0.125), float(0.067));
+			return mix(finalColor, fogCol, fogFactor);
+		})();
+
+		const bladeGeo = createBladeGeometry();
+		const grass = new THREE.InstancedMesh(bladeGeo, grassMat, BLADE_COUNT);
+		grass.frustumCulled = false;
+		scene.add(grass);
+
+		// Ground
+		const groundMat = new THREE.MeshBasicMaterial({ color: 0x051206 });
+		const ground = new THREE.Mesh(new THREE.PlaneGeometry(FIELD_SIZE * 3, FIELD_SIZE * 3), groundMat);
+		ground.rotation.x = -Math.PI / 2;
+		scene.add(ground);
+
+		await renderer.compute(computeInit);
+
+		// ─── Scroll & Reveal Observer ─────────────────────────────────────
+		const reveals = document.querySelectorAll('[data-reveal]');
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					const delay = entry.target.getAttribute('data-delay');
+					if (delay) entry.target.classList.add(`delay-${delay}`);
+					entry.target.classList.add('revealed');
+				}
+			});
+		}, { threshold: 0.1 });
+
+		reveals.forEach(el => observer.observe(el));
+
+		const progressBar = document.getElementById('progressBar');
+		window.addEventListener('scroll', () => {
+			const total = document.documentElement.scrollHeight - window.innerHeight;
+			const progress = Math.min(Math.max(window.scrollY / total, 0), 1);
+			progressBar.style.width = (progress * 100) + '%';
+
+			// Smooth keyframed target camera vectors
+			targetCamPos.x = Math.sin(progress * Math.PI) * 2.5;
+			targetCamPos.y = 7.5 - progress * 4.2;
+			targetCamPos.z = 17.5 - progress * 8.5;
+			targetLookAt.z = -progress * 2.5;
+		});
+
+		// ─── Mouse Raycast ────────────────────────────────────────────────
+		const raycaster = new THREE.Raycaster();
+		const mouseNDC = new THREE.Vector2();
+		const grassPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+		const hitPoint = new THREE.Vector3();
+
+		window.addEventListener('mousemove', (e) => {
+			mouseNDC.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+			raycaster.setFromCamera(mouseNDC, camera);
+			if (raycaster.ray.intersectPlane(grassPlane, hitPoint)) {
+				mouseWorld.value.copy(hitPoint);
+			}
+		});
+
+		window.addEventListener('resize', () => {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		});
+
+		// Render loop with smooth inertial camera damping (lerp)
+		renderer.setAnimationLoop(async () => {
+			currentCamPos.lerp(targetCamPos, 0.045);
+			currentLookAt.lerp(targetLookAt, 0.045);
+			camera.position.copy(currentCamPos);
+			camera.lookAt(currentLookAt);
+
+			await renderer.compute(computeUpdate);
+			await renderer.render(scene, camera);
+		});
+	</script>
+</body>
+</html>

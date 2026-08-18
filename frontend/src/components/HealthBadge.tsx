@@ -41,11 +41,11 @@ export default function HealthBadge() {
   }, []);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+    <div className="bg-white border border-emerald-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-emerald-600 animate-pulse" />
-          <span className="font-semibold text-sm text-slate-800">Backend Connectivity</span>
+          <span className="font-semibold text-sm text-emerald-950">Backend Connectivity</span>
         </div>
         <button
           onClick={checkHealth}
