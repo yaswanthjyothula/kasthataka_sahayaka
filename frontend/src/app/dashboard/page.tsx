@@ -915,7 +915,7 @@ export default function Dashboard() {
                       <option value="tomato">Tomato (Tamatar)</option>
                       <option value="potato">Potato (Aloo)</option>
                       <option value="brinjal">Brinjal / Eggplant (Baingan)</option>
-                      <option value="okra">Okra / Lady's Finger (Bhindi)</option>
+                      <option value="okra">Okra / Lady&apos;s Finger (Bhindi)</option>
                       <option value="cabbage">Cabbage (Patta Gobhi)</option>
                       <option value="cauliflower">Cauliflower (Phool Gobhi)</option>
                       <option value="pumpkin">Pumpkin (Kaddu)</option>
