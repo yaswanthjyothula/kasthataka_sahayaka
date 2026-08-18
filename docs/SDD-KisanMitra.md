@@ -1,6 +1,6 @@
 # Software Design Document (SDD)
 
-## Kasthataka Sahayaka — GenAI Finger Millet Disease Detection & Advisory Platform
+## KisanMitra — GenAI Finger Millet Disease Detection & Advisory Platform
 
 | Field               | Value                                                              |
 | ------------------- | ------------------------------------------------------------------ |
@@ -10,7 +10,7 @@
 | **Author**          | Yaswanth Jyothula                                                  |
 | **Status**          | Draft                                                              |
 | **Companion SRS**   | SRS-KS-001 v1.0                                                    |
-| **Repository**      | https://github.com/yaswanthjyothula/kasthataka_sahayaka             |
+| **Repository**      | https://github.com/yaswanthjyothula/KisanMitra             |
 
 ---
 
@@ -33,7 +33,7 @@
 
 ### 1.1 Purpose
 
-This Software Design Document (SDD) describes the architectural design, component decomposition, data models, interface contracts, deployment topology, and security mechanisms for the **Kasthataka Sahayaka** platform. It translates the requirements defined in [SRS-KS-001](./SRS-Kasthataka-Sahayaka.md) into a concrete technical blueprint for implementation.
+This Software Design Document (SDD) describes the architectural design, component decomposition, data models, interface contracts, deployment topology, and security mechanisms for the **KisanMitra** platform. It translates the requirements defined in [SRS-KS-001](./SRS-KisanMitra.md) into a concrete technical blueprint for implementation.
 
 ### 1.2 Scope
 
@@ -157,7 +157,7 @@ App (RootLayout)
 └── Dashboard (dashboard/page.tsx)
     ├── TopHeader
     │   ├── Mobile Menu Toggle
-    │   ├── Brand Logo & Title ("Kasthataka Sahayaka")
+    │   ├── Brand Logo & Title ("KisanMitra")
     │   ├── Landing Page Back Link
     │   └── Persona Badge
     │
@@ -488,7 +488,7 @@ CREATE TYPE cibrc_status AS ENUM ('approved', 'restricted', 'banned');
 ### 4.3 IndexedDB Schema (Client-Side Offline Queue)
 
 ```javascript
-// Database: kasthataka_sahayaka_db (version 1)
+// Database: KisanMitra_db (version 1)
 // Object Store: pending_sync
 {
   id: IDBKeyPath (autoIncrement),
@@ -654,7 +654,7 @@ CREATE TYPE cibrc_status AS ENUM ('approved', 'restricted', 'banned');
 │ │ Header: Brand + [Dashboard →]   │ │
 │ ├──────────────────────────────────┤ │
 │ │                                  │ │
-│ │ Hero: "Kasthataka Sahayaka"      │ │
+│ │ Hero: "KisanMitra"      │ │
 │ │ Subtitle text                    │ │
 │ │                                  │ │
 │ ├──────────────────────────────────┤ │
@@ -679,7 +679,7 @@ CREATE TYPE cibrc_status AS ENUM ('approved', 'restricted', 'banned');
 #### Dashboard Layout
 ```
 ┌──────────────────────────────────────────────────────┐
-│ Header: [☰] 🌾 Kasthataka Sahayaka    [← Landing]   │
+│ Header: [☰] 🌾 KisanMitra    [← Landing]   │
 ├──────────┬───────────────────────────────────────────┤
 │          │                                           │
 │ Sidebar  │  Main Content Area (active tab)           │

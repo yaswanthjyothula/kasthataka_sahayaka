@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Kasthataka Sahayaka | GenAI Finger Millet Disease Platform',
+  title: 'KisanMitra | GenAI Finger Millet Disease Platform',
   description: 'Progressive Web Application for finger millet disease detection, advisory, and weather fusion.',
   manifest: '/manifest.json',
 };

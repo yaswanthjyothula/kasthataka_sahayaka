@@ -4,7 +4,7 @@ Derived from **SRS-WEB-AGRI-004** (LTTS Smart Agriculture).
 
 ## Monorepo Architecture Overview
 ```text
-kasthataka_sahayaka/
+KisanMitra/
 ├── docs/
 │   └── SRS-WEB-AGRI-004.md         # Full System Requirements Specification
 ├── backend/                        # FastAPI (Python 3.11, async)

@@ -8,7 +8,7 @@ export default function Home() {
       <iframe
         src="/landing.html"
         className="w-full h-full border-0"
-        title="Kasthataka Sahayaka — Digital Oasis Landing Page"
+        title="KisanMitra — Digital Oasis Landing Page"
       />
     </div>
   );

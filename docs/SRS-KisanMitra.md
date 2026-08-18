@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-## Kasthataka Sahayaka — GenAI Finger Millet Disease Detection & Advisory Platform
+## KisanMitra — GenAI Finger Millet Disease Detection & Advisory Platform
 
 | Field               | Value                                                              |
 | ------------------- | ------------------------------------------------------------------ |
@@ -10,7 +10,7 @@
 | **Author**          | Yaswanth Jyothula                                                  |
 | **Status**          | Draft                                                              |
 | **Derived From**    | SRS-WEB-AGRI-004 (LTTS Smart Agriculture)                          |
-| **Repository**      | https://github.com/yaswanthjyothula/kasthataka_sahayaka             |
+| **Repository**      | https://github.com/yaswanthjyothula/KisanMitra             |
 
 ---
 
@@ -33,13 +33,13 @@
 
 ### 1.1 Purpose
 
-This Software Requirements Specification (SRS) defines the complete functional and non-functional requirements for **Kasthataka Sahayaka**, a cloud-native Progressive Web Application (PWA) designed for real-time finger millet (*Eleusine coracana* / ragi) crop disease detection, explainable visual diagnostics, generative agronomical advisory, deterministic chemical-safety guardrails, weather-based pathogen risk forecasting, and multilingual farmer support.
+This Software Requirements Specification (SRS) defines the complete functional and non-functional requirements for **KisanMitra**, a cloud-native Progressive Web Application (PWA) designed for real-time finger millet (*Eleusine coracana* / ragi) crop disease detection, explainable visual diagnostics, generative agronomical advisory, deterministic chemical-safety guardrails, weather-based pathogen risk forecasting, and multilingual farmer support.
 
 The document serves as the binding contract between stakeholders (agricultural extension officers, agronomists, smallholder farmers) and the development team for all phases of the platform build.
 
 ### 1.2 Scope
 
-**Kasthataka Sahayaka** provides:
+**KisanMitra** provides:
 
 - **AI-powered disease detection** for 8 classes of finger millet diseases using deep learning vision models.
 - **Explainable AI (XAI)** visual overlays (Score-CAM heatmaps) so farmers and officers understand *why* a diagnosis was made.
@@ -90,10 +90,10 @@ The document serves as the binding contract between stakeholders (agricultural e
 
 ### 2.1 Product Perspective
 
-Kasthataka Sahayaka is a standalone cloud-native application that operates as a monorepo containing:
+KisanMitra is a standalone cloud-native application that operates as a monorepo containing:
 
 ```
-kasthataka_sahayaka/
+KisanMitra/
 ├── docs/                          # SRS, SDD, and reference documentation
 ├── backend/                       # FastAPI (Python 3.11+, async)
 │   ├── app/
