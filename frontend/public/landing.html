@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
@@ -629,6 +629,73 @@
 			transform: translateY(-1px);
 		}
 
+		/* ── Language Selector ── */
+		.lang-selector {
+			position: relative;
+			pointer-events: auto;
+		}
+		.lang-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 8px 16px;
+			border: 1px solid rgba(160, 230, 110, 0.3);
+			border-radius: 24px;
+			background: rgba(20, 45, 20, 0.55);
+			color: rgba(210, 240, 160, 0.9);
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			cursor: pointer;
+			backdrop-filter: blur(10px);
+			transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+			white-space: nowrap;
+			font-family: inherit;
+		}
+		.lang-btn:hover {
+			background: rgba(45, 85, 45, 0.75);
+			border-color: rgba(180, 245, 120, 0.6);
+			color: #fff;
+		}
+		.lang-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+		.lang-dropdown {
+			display: none;
+			position: absolute;
+			top: calc(100% + 10px);
+			right: 0;
+			width: 220px;
+			background: rgba(10, 28, 12, 0.97);
+			border: 1px solid rgba(100, 200, 80, 0.25);
+			border-radius: 16px;
+			padding: 8px;
+			backdrop-filter: blur(20px);
+			box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+			z-index: 9999;
+			max-height: 340px;
+			overflow-y: auto;
+		}
+		.lang-dropdown.open { display: block; }
+		.lang-dropdown::-webkit-scrollbar { width: 4px; }
+		.lang-dropdown::-webkit-scrollbar-track { background: transparent; }
+		.lang-dropdown::-webkit-scrollbar-thumb { background: rgba(100,200,80,0.3); border-radius: 2px; }
+		.lang-option {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 9px 12px;
+			border-radius: 10px;
+			cursor: pointer;
+			transition: background 0.2s;
+			color: rgba(210, 240, 160, 0.8);
+			font-size: 13px;
+		}
+		.lang-option:hover { background: rgba(60, 130, 40, 0.35); color: #fff; }
+		.lang-option.active { background: rgba(60, 140, 40, 0.5); color: #d4f7a0; font-weight: 700; }
+		.lang-option .lang-native { font-size: 14px; color: rgba(255,255,255,0.7); }
+		.lang-option .lang-check { font-size: 12px; color: #8ddf50; display: none; }
+		.lang-option.active .lang-check { display: inline; }
+
 		.nav-hamburger {
 			display: none;
 			pointer-events: auto;
@@ -700,7 +767,14 @@
 	<nav class="nav-float" id="navFloat">
 		<div class="nav-logo">Kasthataka Sahayaka</div>
 		<div class="nav-links">
-			<a href="/dashboard" class="nav-dashboard-btn">Dashboard →</a>
+			<div class="lang-selector" id="langSelector">
+				<button class="lang-btn" id="langBtn" aria-label="Select Language">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+					<span id="langBtnLabel">EN</span>
+				</button>
+				<div class="lang-dropdown" id="langDropdown"></div>
+			</div>
+			<a href="/dashboard" class="nav-dashboard-btn" id="nav-dashboard-link">Dashboard →</a>
 		</div>
 		<button class="nav-hamburger" id="navHamburger" aria-label="Menu">
 			<span></span><span></span><span></span>
@@ -709,12 +783,11 @@
 
 	<div id="scroll-container">
 		<section class="section hero" id="heroSection" data-stage="0">
-			<span class="hero-tag" data-reveal data-delay="1">Rooted in Tradition, Powered by Tech</span>
-			<h1 data-reveal data-delay="2">Field<br><em>Intelligence</em></h1>
-			<p class="hero-sub" data-reveal data-delay="3">Real-time disease detection and smart advisory to safeguard your yield.</p>
-
+			<span class="hero-tag" data-reveal data-delay="1" data-i18n="hero_tag">Rooted in Tradition, Powered by Tech</span>
+			<h1 data-reveal data-delay="2"><span data-i18n="hero_title1">Field</span><br><em data-i18n="hero_title2">Intelligence</em></h1>
+			<p class="hero-sub" data-reveal data-delay="3" data-i18n="hero_sub">Real-time disease detection and smart advisory to safeguard your yield.</p>
 			<div class="scroll-hint" data-reveal data-delay="4">
-				<span>Explore</span>
+				<span data-i18n="hero_explore">Explore</span>
 				<div class="scroll-line"></div>
 			</div>
 		</section>
@@ -726,68 +799,68 @@
 			</div>
 			<div class="disease-grid">
 				<div class="disease-card" data-reveal data-delay="1">
-					<span class="disease-badge">DETECTION</span>
-					<h3>Crop Disease Detection</h3>
-					<p>AI-driven analysis to identify early-stage pathogens, necrotic lesions, and foliar symptoms across crops.</p>
+					<span class="disease-badge" data-i18n="feat1_badge">DETECTION</span>
+					<h3 data-i18n="feat1_title">Crop Disease Detection</h3>
+					<p data-i18n="feat1_desc">AI-driven analysis to identify early-stage pathogens, necrotic lesions, and foliar symptoms across crops.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="2">
-					<span class="disease-badge">ASSISTANT</span>
-					<h3>AI Chatbot</h3>
-					<p>Interactive conversational assistant providing real-time agronomic guidance, CIBRC safety advisories, and tailored field solutions.</p>
+					<span class="disease-badge" data-i18n="feat2_badge">ASSISTANT</span>
+					<h3 data-i18n="feat2_title">AI Chatbot</h3>
+					<p data-i18n="feat2_desc">Interactive conversational assistant providing real-time agronomic guidance, CIBRC safety advisories, and tailored field solutions.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="3">
-					<span class="disease-badge">FORECAST</span>
-					<h3>Weather Forecasting</h3>
-					<p>Real-time local weather updates, microclimate tracking, and predictive rainfall alerts to optimize spraying and field activities.</p>
+					<span class="disease-badge" data-i18n="feat3_badge">FORECAST</span>
+					<h3 data-i18n="feat3_title">Weather Forecasting</h3>
+					<p data-i18n="feat3_desc">Real-time local weather updates, microclimate tracking, and predictive rainfall alerts to optimize spraying and field activities.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="4">
-					<span class="disease-badge">LANGUAGES</span>
-					<h3>Local Language Support</h3>
-					<p>Multilingual UI and voice interface supporting regional languages and audio assistance for localized farmer accessibility.</p>
+					<span class="disease-badge" data-i18n="feat4_badge">LANGUAGES</span>
+					<h3 data-i18n="feat4_title">Local Language Support</h3>
+					<p data-i18n="feat4_desc">Multilingual UI and voice interface supporting regional languages and audio assistance for localized farmer accessibility.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="1">
-					<span class="disease-badge">PREDICTION</span>
-					<h3>Predictive Yield Analytics</h3>
-					<p>Data-driven harvest forecasting based on canopy health, disease severity, and historical growth metrics.</p>
+					<span class="disease-badge" data-i18n="feat5_badge">PREDICTION</span>
+					<h3 data-i18n="feat5_title">Predictive Yield Analytics</h3>
+					<p data-i18n="feat5_desc">Data-driven harvest forecasting based on canopy health, disease severity, and historical growth metrics.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="2">
-					<span class="disease-badge">GEOLOCATION</span>
-					<h3>GPS & Field Mapping</h3>
-					<p>Location-based field boundary mapping, hotspot tracking, and geotagged disease outbreak monitoring.</p>
+					<span class="disease-badge" data-i18n="feat6_badge">GEOLOCATION</span>
+					<h3 data-i18n="feat6_title">GPS & Field Mapping</h3>
+					<p data-i18n="feat6_desc">Location-based field boundary mapping, hotspot tracking, and geotagged disease outbreak monitoring.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="3">
-					<span class="disease-badge">MANAGEMENT</span>
-					<h3>Resource Management</h3>
-					<p>Smart inventory and input tracking for pesticides, fertilizers, seeds, and water usage optimization.</p>
+					<span class="disease-badge" data-i18n="feat7_badge">MANAGEMENT</span>
+					<h3 data-i18n="feat7_title">Resource Management</h3>
+					<p data-i18n="feat7_desc">Smart inventory and input tracking for pesticides, fertilizers, seeds, and water usage optimization.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="4">
-					<span class="disease-badge">SCHEDULE</span>
-					<h3>Smart Calendar</h3>
-					<p>Automated crop cycle scheduling, spraying timelines, and task reminders tailored to field conditions.</p>
+					<span class="disease-badge" data-i18n="feat8_badge">SCHEDULE</span>
+					<h3 data-i18n="feat8_title">Smart Calendar</h3>
+					<p data-i18n="feat8_desc">Automated crop cycle scheduling, spraying timelines, and task reminders tailored to field conditions.</p>
 				</div>
 			</div>
 		</section>
 
 		<section class="section pillars" id="pillarsSection" data-stage="2">
 			<div class="pillars-header" data-reveal>
-				<span>Three Step Setup</span>
-				<h2 style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 3.5vw, 40px); font-weight: 400; color: #f8fcf0; margin-top: 6px;">Seamless Field Workflow</h2>
+				<span data-i18n="pillars_label">Three Step Setup</span>
+				<h2 style="font-family: 'Playfair Display', serif; font-size: clamp(24px, 3.5vw, 40px); font-weight: 400; color: #f8fcf0; margin-top: 6px;" data-i18n="pillars_heading">Seamless Field Workflow</h2>
 			</div>
 			<div class="pillar-grid">
 				<div class="pillar-card" data-reveal data-delay="1">
 					<div class="pillar-num">01</div>
-					<h3>Smart Field Scanning</h3>
-					<p>1-tap multi-lingual photo capture with automated quality checks, GPS geotagging, and offline queuing.</p>
+					<h3 data-i18n="p1_title">Smart Field Scanning</h3>
+					<p data-i18n="p1_desc">1-tap multi-lingual photo capture with automated quality checks, GPS geotagging, and offline queuing.</p>
 				</div>
 				<div class="pillar-card" data-reveal data-delay="2">
 					<div class="pillar-num">02</div>
-					<h3>AI Disease Diagnosis</h3>
-					<p>Instant multi-crop vision detection with severity scoring, heatmap overlays, and yield impact predictions.</p>
+					<h3 data-i18n="p2_title">AI Disease Diagnosis</h3>
+					<p data-i18n="p2_desc">Instant multi-crop vision detection with severity scoring, heatmap overlays, and yield impact predictions.</p>
 				</div>
 				<div class="pillar-card" data-reveal data-delay="3">
 					<div class="pillar-num">03</div>
-					<h3>Advisory &amp; Management</h3>
-					<p>Generative AI chatbot guidance, smart calendar scheduling, weather-driven spraying alerts, and input tracking.</p>
+					<h3 data-i18n="p3_title">Advisory &amp; Management</h3>
+					<p data-i18n="p3_desc">Generative AI chatbot guidance, smart calendar scheduling, weather-driven spraying alerts, and input tracking.</p>
 				</div>
 			</div>
 		</section>
@@ -795,13 +868,13 @@
 
 
 		<section class="section quote-section" data-stage="4">
-			<blockquote data-reveal>"It feels like having an agricultural expert standing right beside me in the field, helping me make the right choices for my soil and safeguard my family's harvest."</blockquote>
+			<blockquote data-reveal data-i18n="quote_text">"It feels like having an agricultural expert standing right beside me in the field, helping me make the right choices for my soil and safeguard my family's harvest."</blockquote>
 		</section>
 
 		<section class="section cta-section" id="ctaSection" data-stage="5">
-			<h2 data-reveal>Step into<br>the <em>Oasis</em></h2>
-			<p class="cta-sub" data-reveal data-delay="1">Join a growing collective of builders, dreamers, and stewards crafting a world worth inheriting.</p>
-			<a href="#heroSection" class="cta-btn" data-reveal data-delay="2">Begin Your Journey →</a>
+			<h2 data-reveal><span data-i18n="cta_title1">Step into</span><br><em data-i18n="cta_title2">the Oasis</em></h2>
+			<p class="cta-sub" data-reveal data-delay="1" data-i18n="cta_sub">Join a growing collective of builders, dreamers, and stewards crafting a world worth inheriting.</p>
+			<a href="#heroSection" class="cta-btn" data-reveal data-delay="2" data-i18n="cta_btn">Begin Your Journey →</a>
 		</section>
 	</div>
 
@@ -809,11 +882,11 @@
 		<div class="site-footer-inner">
 			<div class="sf-brand">
 				<div class="sf-brand-name">Kasthataka Sahayaka</div>
-				<p class="sf-brand-desc">A sanctuary for sustainable minds building a regenerative future where technology meets the earth.</p>
+				<p class="sf-brand-desc" data-i18n="footer_desc">A sanctuary for sustainable minds building a regenerative future where technology meets the earth.</p>
 			</div>
 		</div>
 		<div class="sf-bottom">
-			<span class="sf-copy">© 2026 Kasthataka Sahayaka. All rights reserved.</span>
+			<span class="sf-copy" data-i18n="footer_copy">© 2026 Kasthataka Sahayaka. All rights reserved.</span>
 		</div>
 	</footer>
 
@@ -1084,4 +1157,91 @@
 		});
 	</script>
 </body>
+
+<script>
+(function(){
+  var LANGS=[
+    {code:'en',native:'English'},{code:'hi',native:'हिन्दी'},
+    {code:'kn',native:'ಕನ್ನಡ'},{code:'te',native:'తెలుగు'},
+    {code:'ta',native:'தமிழ்'},{code:'ml',native:'മലയാളം'},
+    {code:'mr',native:'मराठी'},{code:'gu',native:'ગુજરાતી'},
+    {code:'pa',native:'ਪੰਜਾਬੀ'},{code:'or',native:'ଓଡ଼ିଆ'},
+    {code:'bn',native:'বাংলা'},{code:'as',native:'অসমীয়া'},
+    {code:'ur',native:'اردو'},{code:'bho',native:'भोजपुरी'},
+    {code:'mai',native:'मैथिली'},{code:'kok',native:'कोंकणी'},
+    {code:'doi',native:'डोगरी'},{code:'mni',native:'মৈতৈলোন্'},
+    {code:'ne',native:'नेपाली'},{code:'sa',native:'संस्कृत'}
+  ];
+  var T={
+    en:{nav_dashboard:'Dashboard →',hero_tag:'Rooted in Tradition, Powered by Tech',hero_title1:'Field',hero_title2:'Intelligence',hero_sub:'Real-time disease detection and smart advisory to safeguard your yield.',hero_explore:'Explore',feat1_badge:'DETECTION',feat1_title:'Crop Disease Detection',feat1_desc:'AI-driven analysis to identify early-stage pathogens, necrotic lesions, and foliar symptoms.',feat2_badge:'ASSISTANT',feat2_title:'AI Chatbot',feat2_desc:'Conversational assistant providing real-time agronomic guidance, CIBRC safety advisories, and tailored solutions.',feat3_badge:'FORECAST',feat3_title:'Weather Forecasting',feat3_desc:'Real-time weather updates, microclimate tracking, and predictive rainfall alerts.',feat4_badge:'LANGUAGES',feat4_title:'Local Language Support',feat4_desc:'Multilingual UI and voice interface supporting regional languages for farmer accessibility.',feat5_badge:'PREDICTION',feat5_title:'Predictive Yield Analytics',feat5_desc:'Data-driven harvest forecasting based on canopy health and disease severity.',feat6_badge:'GEOLOCATION',feat6_title:'GPS & Field Mapping',feat6_desc:'Location-based field mapping, hotspot tracking, and geotagged disease monitoring.',feat7_badge:'MANAGEMENT',feat7_title:'Resource Management',feat7_desc:'Smart inventory tracking for pesticides, fertilizers, seeds, and water optimization.',feat8_badge:'SCHEDULE',feat8_title:'Smart Calendar',feat8_desc:'Automated crop cycle scheduling and task reminders tailored to field conditions.',pillars_label:'Three Step Setup',pillars_heading:'Seamless Field Workflow',p1_title:'Smart Field Scanning',p1_desc:'1-tap photo capture with quality checks, GPS geotagging, and offline queuing.',p2_title:'AI Disease Diagnosis',p2_desc:'Instant multi-crop detection with severity scoring, heatmaps, and yield predictions.',p3_title:'Advisory & Management',p3_desc:'AI chatbot guidance, smart calendar scheduling, weather-driven alerts and tracking.',quote_text:'"It feels like having an agricultural expert standing right beside me in the field."',cta_title1:'Step into',cta_title2:'the Oasis',cta_sub:'Join a growing collective crafting a world worth inheriting.',cta_btn:'Begin Your Journey →',footer_desc:'A sanctuary for sustainable minds building a regenerative future.',footer_copy:'© 2026 Kasthataka Sahayaka. All rights reserved.'},
+    hi:{nav_dashboard:'डैशबोर्ड →',hero_tag:'परंपरा में जड़ें, तकनीक से सशक्त',hero_title1:'खेत',hero_title2:'बुद्धिमत्ता',hero_sub:'फसल की रक्षा के लिए रियल-टाइम रोग पहचान और स्मार्ट सलाह।',hero_explore:'अन्वेषण करें',feat1_badge:'पहचान',feat1_title:'फसल रोग पहचान',feat1_desc:'प्रारंभिक रोगाणुओं और पत्ती लक्षणों की AI-चालित पहचान।',feat2_badge:'सहायक',feat2_title:'AI चैटबॉट',feat2_desc:'रियल-टाइम कृषि मार्गदर्शन और CIBRC सुरक्षा सलाह देने वाला संवादात्मक सहायक।',feat3_badge:'पूर्वानुमान',feat3_title:'मौसम पूर्वानुमान',feat3_desc:'स्थानीय मौसम अपडेट और वर्षा अलर्ट।',feat4_badge:'भाषाएँ',feat4_title:'स्थानीय भाषा समर्थन',feat4_desc:'क्षेत्रीय भाषाओं का समर्थन करने वाला बहुभाषी UI।',feat5_badge:'पूर्वानुमान',feat5_title:'उपज विश्लेषण',feat5_desc:'डेटा-चालित फसल पूर्वानुमान।',feat6_badge:'जियोलोकेशन',feat6_title:'GPS और खेत मानचित्रण',feat6_desc:'स्थान-आधारित खेत सीमा मानचित्रण।',feat7_badge:'प्रबंधन',feat7_title:'संसाधन प्रबंधन',feat7_desc:'कीटनाशकों और उर्वरकों के लिए स्मार्ट इन्वेंटरी।',feat8_badge:'कार्यक्रम',feat8_title:'स्मार्ट कैलेंडर',feat8_desc:'स्वयंचालित फसल चक्र शेड्यूलिंग।',pillars_label:'तीन चरण सेटअप',pillars_heading:'निर्बाध खेत कार्यप्रवाह',p1_title:'स्मार्ट खेत स्कैनिंग',p1_desc:'GPS जियोटैगिंग के साथ 1-टैप फोटो कैप्चर।',p2_title:'AI रोग निदान',p2_desc:'तत्काल मल्टी-क्रॉप विजन डिटेक्शन।',p3_title:'सलाह और प्रबंधन',p3_desc:'AI मार्गदर्शन, स्मार्ट कैलेंडर और मौसम अलर्ट।',quote_text:'"ऐसा लगता है जैसे खेत में मेरे बगल में एक कृषि विशेषज्ञ खड़ा हो।"',cta_title1:'प्रवेश करें',cta_title2:'नखलिस्तान में',cta_sub:'एक बेहतर दुनिया बनाने वाले समूह से जुड़ें।',cta_btn:'अपनी यात्रा शुरू करें →',footer_desc:'टिकाऊ भविष्य बनाने वाले मनों के लिए एक आश्रय।',footer_copy:'© 2026 कष्टतक सहायक। सर्वाधिकार सुरक्षित।'},
+    kn:{nav_dashboard:'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ →',hero_tag:'ಸಂಪ್ರದಾಯದಲ್ಲಿ ಬೇರೂರಿ, ತಂತ್ರಜ್ಞಾನದಿಂದ ಸಶಕ್ತ',hero_title1:'ಕ್ಷೇತ್ರ',hero_title2:'ಬುದ್ಧಿಮತ್ತೆ',hero_sub:'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ರಕ್ಷಿಸಲು ರಿಯಲ್-ಟೈಮ್ ರೋಗ ಪತ್ತೆ ಮತ್ತು ಸ್ಮಾರ್ಟ್ ಸಲಹೆ.',hero_explore:'ಅನ್ವೇಷಿಸಿ',feat1_badge:'ಪತ್ತೆ',feat1_title:'ಬೆಳೆ ರೋಗ ಪತ್ತೆ',feat1_desc:'ಆರಂಭಿಕ ರೋಗಕಾರಕಗಳನ್ನು ಗುರುತಿಸಲು AI ವಿಶ್ಲೇಷಣೆ.',feat2_badge:'ಸಹಾಯಕ',feat2_title:'AI ಚಾಟ್‌ಬಾಟ್',feat2_desc:'ರಿಯಲ್-ಟೈಮ್ ಕೃಷಿ ಮಾರ್ಗದರ್ಶನ ನೀಡುವ ಸಂವಾದ ಸಹಾಯಕ.',feat3_badge:'ಮುನ್ಸೂಚನೆ',feat3_title:'ಹವಾಮಾನ ಮುನ್ಸೂಚನೆ',feat3_desc:'ಸ್ಥಳೀಯ ಹವಾಮಾನ ಮತ್ತು ಮಳೆ ಎಚ್ಚರಿಕೆಗಳು.',feat4_badge:'ಭಾಷೆಗಳು',feat4_title:'ಸ್ಥಳೀಯ ಭಾಷಾ ಬೆಂಬಲ',feat4_desc:'ಪ್ರಾದೇಶಿಕ ಭಾಷೆಗಳ ಬಹುಭಾಷಾ UI.',feat5_badge:'ಅಂದಾಜು',feat5_title:'ಇಳುವರಿ ವಿಶ್ಲೇಷಣೆ',feat5_desc:'ಡೇಟಾ-ಆಧಾರಿತ ಇಳುವರಿ ಅಂದಾಜು.',feat6_badge:'ಜಿಯೋಲೊಕೇಶನ್',feat6_title:'GPS ಮತ್ತು ಕ್ಷೇತ್ರ ಮ್ಯಾಪಿಂಗ್',feat6_desc:'ಕ್ಷೇತ್ರ ಗಡಿ ಮ್ಯಾಪಿಂಗ್.',feat7_badge:'ನಿರ್ವಹಣೆ',feat7_title:'ಸಂಪನ್ಮೂಲ ನಿರ್ವಹಣೆ',feat7_desc:'ಕೀಟನಾಶಕ ಮತ್ತು ನೀರಿನ ಸ್ಮಾರ್ಟ್ ಟ್ರ್ಯಾಕಿಂಗ್.',feat8_badge:'ಷೆಡ್ಯೂಲ್',feat8_title:'ಸ್ಮಾರ್ಟ್ ಕ್ಯಾಲೆಂಡರ್',feat8_desc:'ಸ್ವಯಂಚಾಲಿತ ಬೆಳೆ ಷೆಡ್ಯೂಲಿಂಗ್.',pillars_label:'ಮೂರು ಹಂತದ ಸೆಟಪ್',pillars_heading:'ನಿರಂತರ ಕ್ಷೇತ್ರ ಕಾರ್ಯಪ್ರವಾಹ',p1_title:'ಸ್ಮಾರ್ಟ್ ಕ್ಷೇತ್ರ ಸ್ಕ್ಯಾನಿಂಗ್',p1_desc:'GPS ಜಿಯೋಟ್ಯಾಗಿಂಗ್‌ನೊಂದಿಗೆ 1-ಟ್ಯಾಪ್ ಫೋಟೋ.',p2_title:'AI ರೋಗ ನಿರ್ಣಯ',p2_desc:'ತ್ವರಿತ ಬೆಳೆ ರೋಗ ಪತ್ತೆ.',p3_title:'ಸಲಹೆ ಮತ್ತು ನಿರ್ವಹಣೆ',p3_desc:'AI ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ಸ್ಮಾರ್ಟ್ ಷೆಡ್ಯೂಲಿಂಗ್.',quote_text:'"ಕ್ಷೇತ್ರದಲ್ಲಿ ನನ್ನ ಪಕ್ಕ ಕೃಷಿ ತಜ್ಞ ನಿಂತಿದ್ದಾರೆ ಎಂಬ ಭಾವನೆ ಆಗುತ್ತದೆ."',cta_title1:'ಒಳ ಪ್ರವೇಶಿಸಿ',cta_title2:'ಓಯಸಿಸ್‌ಗೆ',cta_sub:'ಉತ್ತಮ ಜಗತ್ತು ನಿರ್ಮಿಸುವ ಸಮೂಹಕ್ಕೆ ಸೇರಿ.',cta_btn:'ಪ್ರಯಾಣ ಆರಂಭಿಸಿ →',footer_desc:'ತಂತ್ರಜ್ಞಾನ ಮತ್ತು ಭೂಮಿ ಸೇರುವ ಭವಿಷ್ಯ ನಿರ್ಮಿಸುವ ಆಶ್ರಯ.',footer_copy:'© 2026 ಕಷ್ಟತಕ ಸಹಾಯಕ. ಎಲ್ಲ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.'},
+    te:{nav_dashboard:'డాష్‌బోర్డ్ →',hero_tag:'సంప్రదాయంలో వేళ్ళూనుకొని, సాంకేతికతతో శక్తివంతం',hero_title1:'పొలం',hero_title2:'తెలివితేటలు',hero_sub:'మీ పంటను రక్షించుకోవడానికి రియల్-టైమ్ వ్యాధి గుర్తింపు మరియు స్మార్ట్ సలహా.',hero_explore:'అన్వేషించండి',feat1_badge:'గుర్తింపు',feat1_title:'పంట వ్యాధి గుర్తింపు',feat1_desc:'ఆరంభ దశ వ్యాధికారకాలను గుర్తించే AI విశ్లేషణ.',feat2_badge:'సహాయకుడు',feat2_title:'AI చాట్‌బాట్',feat2_desc:'రియల్-టైమ్ వ్యవసాయ మార్గదర్శకత్వం అందించే సంభాషణ సహాయకుడు.',feat3_badge:'సూచన',feat3_title:'వాతావరణ సూచన',feat3_desc:'స్థానిక వాతావరణ నవీకరణలు మరియు వర్షపాతం హెచ్చరికలు.',feat4_badge:'భాషలు',feat4_title:'స్థానిక భాషా మద్దతు',feat4_desc:'ప్రాంతీయ భాషలకు బహుభాషా UI మద్దతు.',feat5_badge:'అంచనా',feat5_title:'దిగుబడి విశ్లేషణలు',feat5_desc:'డేటా-ఆధారిత పంట దిగుబడి అంచనా.',feat6_badge:'జియోలొకేషన్',feat6_title:'GPS & పొలం మ్యాపింగ్',feat6_desc:'పొలం సరిహద్దు మ్యాపింగ్ మరియు వ్యాధి పర్యవేక్షణ.',feat7_badge:'నిర్వహణ',feat7_title:'వనరుల నిర్వహణ',feat7_desc:'క్రిమిసంహారకాలు మరియు నీటి వినియోగ స్మార్ట్ ట్రాకింగ్.',feat8_badge:'షెడ్యూల్',feat8_title:'స్మార్ట్ క్యాలెండర్',feat8_desc:'స్వయంచాలక పంట చక్రం షెడ్యూలింగ్.',pillars_label:'మూడు దశల సెటప్',pillars_heading:'అతుకులు లేని పొలం వర్క్‌ఫ్లో',p1_title:'స్మార్ట్ ఫీల్డ్ స్కానింగ్',p1_desc:'GPS జియోట్యాగింగ్‌తో 1-ట్యాప్ ఫోటో.',p2_title:'AI వ్యాధి నిర్ధారణ',p2_desc:'తక్షణ మల్టీ-క్రాప్ వ్యాధి గుర్తింపు.',p3_title:'సలహా & నిర్వహణ',p3_desc:'AI మార్గదర్శకత్వం మరియు స్మార్ట్ షెడ్యూలింగ్.',quote_text:'"పొలంలో నా పక్కన వ్యవసాయ నిపుణుడు నిలబడినట్లు అనిపిస్తుంది."',cta_title1:'లోపలికి అడుగు పెట్టండి',cta_title2:'ఒయాసిస్‌లోకి',cta_sub:'మంచి ప్రపంచాన్ని నిర్మించే సమూహంలో చేరండి.',cta_btn:'మీ ప్రయాణం ప్రారంభించండి →',footer_desc:'సాంకేతికత భూమిని కలుసుకునే భవిష్యత్తు నిర్మించే ఆశ్రయం.',footer_copy:'© 2026 కష్టతక సహాయక. అన్ని హక్కులూ రిజర్వు చేయబడ్డాయి.'},
+    ta:{nav_dashboard:'டாஷ்போர்டு →',hero_tag:'பாரம்பரியத்தில் வேர்கள், தொழில்நுட்பத்தால் வலிமை',hero_title1:'வயல்',hero_title2:'நுண்ணறிவு',hero_sub:'உங்கள் மகசூலைப் பாதுகாக்க நிகழ்நேர நோய் கண்டறிதல்.',hero_explore:'ஆராயுங்கள்',feat1_badge:'கண்டறிதல்',feat1_title:'பயிர் நோய் கண்டறிதல்',feat1_desc:'ஆரம்பகால நோய்க்கிருமிகளை அடையாளம் காண AI பகுப்பாய்வு.',feat2_badge:'உதவியாளர்',feat2_title:'AI சாட்போட்',feat2_desc:'நிகழ்நேர விவசாய வழிகாட்டுதல் வழங்கும் உரையாடல் உதவியாளர்.',feat3_badge:'முன்னறிவிப்பு',feat3_title:'வானிலை முன்னறிவிப்பு',feat3_desc:'உள்ளூர் வானிலை மற்றும் மழை எச்சரிக்கைகள்.',feat4_badge:'மொழிகள்',feat4_title:'உள்ளூர் மொழி ஆதரவு',feat4_desc:'பிராந்திய மொழிகளுக்கான பல மொழி UI.',feat5_badge:'கணிப்பு',feat5_title:'மகசூல் பகுப்பாய்வு',feat5_desc:'தரவு-இயக்கு அறுவடை கணிப்பு.',feat6_badge:'ஜியோலொகேஷன்',feat6_title:'GPS & வயல் மேப்பிங்',feat6_desc:'வயல் எல்லை மேப்பிங்.',feat7_badge:'மேலாண்மை',feat7_title:'வள மேலாண்மை',feat7_desc:'பூச்சிக்கொல்லி மற்றும் நீர் கண்காணிப்பு.',feat8_badge:'அட்டவணை',feat8_title:'ஸ்மார்ட் நாட்காட்டி',feat8_desc:'தானியங்கி பயிர் சுழற்சி அட்டவணை.',pillars_label:'மூன்று படி அமைவு',pillars_heading:'தடையற்ற வயல் பணிப்பாய்வு',p1_title:'ஸ்மார்ட் வயல் ஸ்கேனிங்',p1_desc:'GPS ஜியோடேகிங்குடன் 1-டேப் புகைப்படம்.',p2_title:'AI நோய் நோயறிதல்',p2_desc:'உடனடி பயிர் நோய் கண்டறிதல்.',p3_title:'ஆலோசனை & மேலாண்மை',p3_desc:'AI வழிகாட்டுதல் மற்றும் திட்டமிடல்.',quote_text:'"வயலில் என் அருகில் ஒரு விவசாய நிபுணர் நிற்கிறார் போல் உணர்கிறேன்."',cta_title1:'நுழையுங்கள்',cta_title2:'ஓயாசிஸுக்கு',cta_sub:'உரிமைக்குரிய உலகை உருவாக்கும் கூட்டத்தில் சேருங்கள்.',cta_btn:'உங்கள் பயணத்தை தொடங்குங்கள் →',footer_desc:'தொழில்நுட்பம் பூமியை சந்திக்கும் எதிர்காலம் உருவாக்கும் புகலிடம்.',footer_copy:'© 2026 கஷ்டதக சஹாயக. அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.'},
+    ml:{nav_dashboard:'ഡാഷ്‌ബോർഡ് →',hero_tag:'പാരമ്പര്യത്തിൽ വേരൂന്നി, സാങ്കേതികതയിൽ ശക്തി',hero_title1:'വയൽ',hero_title2:'ബുദ്ധി',hero_sub:'വിളവ് സംരക്ഷിക്കാൻ തത്സമയ രോഗ കണ്ടെത്തൽ.',hero_explore:'പര്യവേക്ഷണം',feat1_badge:'കണ്ടെത്തൽ',feat1_title:'വിള രോഗ കണ്ടെത്തൽ',feat1_desc:'ആദ്യ ഘട്ട രോഗാണുക്കൾ തിരിച്ചറിയാൻ AI വിശകലനം.',feat2_badge:'സഹായി',feat2_title:'AI ചാറ്റ്ബോട്ട്',feat2_desc:'തത്സമയ കൃഷി മാർഗ്ഗദർശനം നൽകുന്ന സഹായി.',feat3_badge:'പ്രവചനം',feat3_title:'കാലാവസ്ഥ പ്രവചനം',feat3_desc:'തദ്ദേശ കാലാവസ്ഥ, മഴ മുന്നറിയിപ്പുകൾ.',feat4_badge:'ഭാഷകൾ',feat4_title:'പ്രാദേശിക ഭാഷാ പിന്തുണ',feat4_desc:'പ്രാദേശിക ഭാഷകൾക്ക് ബഹുഭാഷാ UI.',feat5_badge:'പ്രവചനം',feat5_title:'വിളവ് വിശകലനം',feat5_desc:'ഡേറ്റ-ചോദിത വിളവ് പ്രവചനം.',feat6_badge:'ജിയോലൊക്കേഷൻ',feat6_title:'GPS & ഫീൽഡ് മാപ്പിംഗ്',feat6_desc:'ഫീൽഡ് അതിർത്തി മാപ്പിംഗ്.',feat7_badge:'മാനേജ്‌മെന്റ്',feat7_title:'റിസോഴ്‌സ് മാനേജ്‌മെന്റ്',feat7_desc:'കീടനാശിനി, നീർ ഉപഭോഗ ട്രാക്കിംഗ്.',feat8_badge:'ഷെഡ്യൂൾ',feat8_title:'സ്മാർട്ട് കലണ്ടർ',feat8_desc:'സ്വയമേ വിള ചക്ര ഷെഡ്യൂൾ.',pillars_label:'മൂന്ന് ഘട്ട സജ്ജീകരണം',pillars_heading:'തടസ്സരഹിത ഫീൽഡ് വർക്ക്ഫ്ലോ',p1_title:'സ്മാർട്ട് ഫീൽഡ് സ്കാനിംഗ്',p1_desc:'GPS ജിയോടാഗിംഗ് സഹിതം 1-ടാപ്പ് ഫോട്ടോ.',p2_title:'AI രോഗ നിർണ്ണയം',p2_desc:'തത്ക്ഷണ വിള രോഗ കണ്ടെത്തൽ.',p3_title:'ഉപദേശം & മാനേജ്‌മെന്റ്',p3_desc:'AI മാർഗ്ഗദർശനവും സ്മാർട്ട് ഷെഡ്യൂളിംഗും.',quote_text:'"വയലിൽ ഒരു കൃഷി വിദഗ്ധൻ ഒപ്പം നിൽക്കുന്നതു പോലെ തോന്നുന്നു."',cta_title1:'കടന്നു ചെല്ലൂ',cta_title2:'ഒആസിസിലേക്ക്',cta_sub:'നല്ല ലോകം കെട്ടിപ്പടുക്കുന്ന സമൂഹത്തിൽ ചേരൂ.',cta_btn:'യാത്ര ആരംഭിക്കൂ →',footer_desc:'സാങ്കേതികത ഭൂമിയെ കണ്ടുമുട്ടുന്ന ഭാവി കെട്ടിപ്പടുക്കുന്ന ആശ്രയം.',footer_copy:'© 2026 കഷ്‌ടതക സഹായക. എല്ലാ അവകാശങ്ങളും നിക്ഷിപ്‌തം.'},
+    mr:{nav_dashboard:'डॅशबोर्ड →',hero_tag:'परंपरेत रुजलेले, तंत्रज्ञानाने सशक्त',hero_title1:'शेत',hero_title2:'बुद्धिमत्ता',hero_sub:'आपल्या पिकाचे रक्षण करण्यासाठी रियल-टाइम रोग ओळख.',hero_explore:'अन्वेषण करा',feat1_badge:'ओळख',feat1_title:'पीक रोग ओळख',feat1_desc:'सुरुवातीच्या रोगकारकांची AI-चालित ओळख.',feat2_badge:'सहाय्यक',feat2_title:'AI चॅटबॉट',feat2_desc:'रियल-टाइम कृषी मार्गदर्शन देणारा संवादी सहाय्यक.',feat3_badge:'अंदाज',feat3_title:'हवामान अंदाज',feat3_desc:'स्थानिक हवामान आणि पाऊस इशारे.',feat4_badge:'भाषा',feat4_title:'स्थानिक भाषा समर्थन',feat4_desc:'प्रादेशिक भाषांसाठी बहुभाषिक UI.',feat5_badge:'अंदाज',feat5_title:'उत्पादन विश्लेषण',feat5_desc:'डेटा-चालित पीक अंदाज.',feat6_badge:'जिओलोकेशन',feat6_title:'GPS आणि शेत मॅपिंग',feat6_desc:'शेत सीमा मॅपिंग.',feat7_badge:'व्यवस्थापन',feat7_title:'संसाधन व्यवस्थापन',feat7_desc:'कीटकनाशके आणि पाण्यासाठी स्मार्ट ट्रॅकिंग.',feat8_badge:'वेळापत्रक',feat8_title:'स्मार्ट कॅलेंडर',feat8_desc:'स्वयंचलित पीक चक्र वेळापत्रक.',pillars_label:'तीन पायरी सेटअप',pillars_heading:'अखंड शेत कार्यप्रवाह',p1_title:'स्मार्ट फील्ड स्कॅनिंग',p1_desc:'GPS जिओटॅगिंगसह 1-टॅप फोटो.',p2_title:'AI रोग निदान',p2_desc:'त्वरित मल्टी-क्रॉप रोग ओळख.',p3_title:'सल्ला आणि व्यवस्थापन',p3_desc:'AI मार्गदर्शन आणि स्मार्ट शेड्यूलिंग.',quote_text:'"शेतात माझ्या बाजूला एक कृषी तज्ज्ञ उभा असल्यासारखे वाटते."',cta_title1:'आत पाऊल टाका',cta_title2:'ओएसिसमध्ये',cta_sub:'वारसायोग्य जग घडवणाऱ्या समूहात सामील व्हा.',cta_btn:'आपला प्रवास सुरू करा →',footer_desc:'तंत्रज्ञान पृथ्वीला भेटते अशा भविष्य घडवणाऱ्या मनांसाठी अभयारण्य.',footer_copy:'© 2026 कष्टतक सहायक. सर्व हक्क राखीव.'},
+    gu:{nav_dashboard:'ડૅશબોર્ડ →',hero_tag:'પરંપરામાં મૂળ, ટેક્નોલૉજીથી સશક્ત',hero_title1:'ખેતર',hero_title2:'બુદ્ધિ',hero_sub:'પાકની રક્ષા માટે રીઅલ-ટાઈમ રોગ શોધ.',hero_explore:'અન્વેષણ કરો',feat1_badge:'શોધ',feat1_title:'પાક રોગ શોધ',feat1_desc:'પ્રારંભિક રોગકારકો ઓળખવા AI વિશ્લેષણ.',feat2_badge:'સહાયક',feat2_title:'AI ચેટબૉટ',feat2_desc:'રીઅલ-ટાઈમ કૃષિ માર્ગદર્શન.',feat3_badge:'આગાહી',feat3_title:'હવામાન આગાહી',feat3_desc:'સ્થાનિક હવામાન અને વરસાદ ચેતવણીઓ.',feat4_badge:'ભાષાઓ',feat4_title:'સ્થાનિક ભાષા સમર્થન',feat4_desc:'પ્રાદેશિક ભાષાઓ માટે બહુભાષી UI.',feat5_badge:'આગાહી',feat5_title:'ઉત્પાદન વિશ્લેષણ',feat5_desc:'ડેટા-ચાલિત પાક આગાહી.',feat6_badge:'જિઓ-લૉકેશન',feat6_title:'GPS & ખેતર મૅપિંગ',feat6_desc:'ખેત સીમા મૅપિંગ.',feat7_badge:'વ્યવસ્થાપન',feat7_title:'સ્ત્રોત વ્યવસ્થાપન',feat7_desc:'જંતુનાશક અને પાણી ટ્રૅકિંગ.',feat8_badge:'અનુસૂચી',feat8_title:'સ્માર્ટ કૅલેન્ડર',feat8_desc:'સ્વચાલિત પાક ચક્ર.',pillars_label:'ત્રણ-પગલા સેટઅપ',pillars_heading:'સીમલેસ ખેત વર્કફ્લો',p1_title:'સ્માર્ટ ફિલ્ડ સ્કૅનિંગ',p1_desc:'GPS ટૅગ સાથે 1-ટૅપ ફોટો.',p2_title:'AI રોગ નિદાન',p2_desc:'ઝડપી પાક રોગ શોધ.',p3_title:'સલાહ & વ્યવસ્થાપન',p3_desc:'AI માર્ગદર્શન અને સ્માર્ટ શેડ્યૂલ.',quote_text:'"ખેતરમાં કૃષિ નિષ્ણાત મારી સાથે ઊભો છે એવું લાગે છે."',cta_title1:'અંદર આવો',cta_title2:'ઓએસિસ માં',cta_sub:'સારી દુનિયા બનાવનારા સમૂહ સાથે જોડાઓ.',cta_btn:'તમારી યાત્રા શરૂ કરો →',footer_desc:'ટેક્નૉ-ભૂ ભવિષ્ય ઘડનારા મનો માટે આશ્રય.',footer_copy:'© 2026 કષ્ટતક સહાયક. સર્વ હક્ક સુરક્ષિત.'},
+    pa:{nav_dashboard:'ਡੈਸ਼ਬੋਰਡ →',hero_tag:'ਪਰੰਪਰਾ ਵਿੱਚ ਜੜੇ, ਤਕਨੀਕ ਨਾਲ ਸਸ਼ਕਤ',hero_title1:'ਖੇਤ',hero_title2:'ਬੁੱਧੀ',hero_sub:'ਫਸਲ ਦੀ ਰੱਖਿਆ ਲਈ ਰੀਅਲ-ਟਾਈਮ ਬਿਮਾਰੀ ਪਛਾਣ।',hero_explore:'ਖੋਜੋ',feat1_badge:'ਪਛਾਣ',feat1_title:'ਫਸਲ ਰੋਗ ਪਛਾਣ',feat1_desc:'ਸ਼ੁਰੂਆਤੀ ਰੋਗਕਾਰਕਾਂ ਦੀ AI ਪਛਾਣ।',feat2_badge:'ਸਹਾਇਕ',feat2_title:'AI ਚੈਟਬੋਟ',feat2_desc:'ਰੀਅਲ-ਟਾਈਮ ਖੇਤੀਬਾੜੀ ਮਾਰਗਦਰਸ਼ਨ।',feat3_badge:'ਮੌਸਮ',feat3_title:'ਮੌਸਮ ਪੂਰਵਾਨੁਮਾਨ',feat3_desc:'ਸਥਾਨਕ ਮੌਸਮ ਅਤੇ ਮੀਂਹ ਚੇਤਾਵਨੀਆਂ।',feat4_badge:'ਭਾਸ਼ਾਵਾਂ',feat4_title:'ਸਥਾਨਕ ਭਾਸ਼ਾ ਸਹਾਇਤਾ',feat4_desc:'ਖੇਤਰੀ ਭਾਸ਼ਾਵਾਂ ਲਈ ਬਹੁਭਾਸ਼ੀ UI।',feat5_badge:'ਅੰਦਾਜ਼ਾ',feat5_title:'ਝਾੜ ਵਿਸ਼ਲੇਸ਼ਣ',feat5_desc:'ਡੇਟਾ-ਚਾਲਿਤ ਫਸਲ ਪੂਰਵਾਨੁਮਾਨ।',feat6_badge:'ਜਿਓਲੋਕੇਸ਼ਨ',feat6_title:'GPS ਅਤੇ ਖੇਤ ਮੈਪਿੰਗ',feat6_desc:'ਖੇਤ ਸੀਮਾ ਮੈਪਿੰਗ।',feat7_badge:'ਪ੍ਰਬੰਧਨ',feat7_title:'ਸਰੋਤ ਪ੍ਰਬੰਧਨ',feat7_desc:'ਕੀਟਨਾਸ਼ਕ ਅਤੇ ਪਾਣੀ ਟਰੈਕਿੰਗ।',feat8_badge:'ਕਾਰਜਕ੍ਰਮ',feat8_title:'ਸਮਾਰਟ ਕੈਲੰਡਰ',feat8_desc:'ਆਟੋਮੈਟਿਕ ਫਸਲ ਚੱਕਰ।',pillars_label:'ਤਿੰਨ ਕਦਮ ਸੈਟਅਪ',pillars_heading:'ਸਹਿਜ ਖੇਤ ਵਰਕਫਲੋ',p1_title:'ਸਮਾਰਟ ਫੀਲਡ ਸਕੈਨਿੰਗ',p1_desc:'GPS ਟੈਗਿੰਗ ਨਾਲ 1-ਟੈਪ ਫੋਟੋ।',p2_title:'AI ਬਿਮਾਰੀ ਨਿਦਾਨ',p2_desc:'ਤੁਰੰਤ ਬਿਮਾਰੀ ਪਛਾਣ।',p3_title:'ਸਲਾਹ ਅਤੇ ਪ੍ਰਬੰਧਨ',p3_desc:'AI ਮਾਰਗਦਰਸ਼ਨ ਅਤੇ ਸਮਾਰਟ ਸ਼ਡਿਊਲਿੰਗ।',quote_text:'"ਖੇਤ ਵਿੱਚ ਇੱਕ ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਮੇਰੇ ਨਾਲ ਖੜਾ ਹੈ ਜਿਵੇਂ ਲੱਗਦਾ ਹੈ।"',cta_title1:'ਅੰਦਰ ਆਓ',cta_title2:'ਓਏਸਿਸ ਵਿੱਚ',cta_sub:'ਬਿਹਤਰ ਦੁਨੀਆ ਬਣਾਉਣ ਵਾਲੇ ਸਮੂਹ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ।',cta_btn:'ਆਪਣੀ ਯਾਤਰਾ ਸ਼ੁਰੂ ਕਰੋ →',footer_desc:'ਤਕਨੀਕ ਅਤੇ ਧਰਤੀ ਮਿਲਦੇ ਭਵਿੱਖ ਬਣਾਉਣ ਵਾਲਿਆਂ ਲਈ ਆਸਰਾ।',footer_copy:'© 2026 ਕਸ਼ਟਤਕ ਸਹਾਇਕ. ਸਾਰੇ ਅਧਿਕਾਰ ਸੁਰੱਖਿਅਤ।'},
+    bn:{nav_dashboard:'ড্যাশবোর্ড →',hero_tag:'ঐতিহ্যে শিকড়, প্রযুক্তিতে শক্তি',hero_title1:'মাঠ',hero_title2:'বুদ্ধিমত্তা',hero_sub:'ফসল রক্ষায় রোগ সনাক্তকরণ।',hero_explore:'অন্বেষণ',feat1_badge:'সনাক্ত',feat1_title:'ফসল রোগ সনাক্ত',feat1_desc:'AI বিশ্লেষণ।',feat2_badge:'সহকারী',feat2_title:'AI চ্যাটবট',feat2_desc:'কৃষি নির্দেশনা।',feat3_badge:'পূর্বাভাস',feat3_title:'আবহাওয়া',feat3_desc:'আবহাওয়া সতর্কতা।',feat4_badge:'ভাষা',feat4_title:'ভাষা',feat4_desc:'ভাষা UI।',feat5_badge:'পূর্বাভাস',feat5_title:'ফলন',feat5_desc:'পূর্বাভাস।',feat6_badge:'GPS',feat6_title:'GPS মানচিত্র',feat6_desc:'মাঠ সীমানা।',feat7_badge:'ব্যবস্থাপনা',feat7_title:'সম্পদ',feat7_desc:'ট্র্যাকিং।',feat8_badge:'ক্যালেন্ডার',feat8_title:'ক্যালেন্ডার',feat8_desc:'ফসল চক্র।',pillars_label:'তিন ধাপ',pillars_heading:'মাঠ ওয়ার্কফ্লো',p1_title:'স্মার্ট স্ক্যান',p1_desc:'GPS ছবি।',p2_title:'AI রোগ নির্ণয়',p2_desc:'দ্রুত সনাক্ত।',p3_title:'পরামর্শ',p3_desc:'AI।',quote_text:'মাঠে বিশেষজ্ঞ পাশে দাঁড়িয়ে মনে হয়।',cta_title1:'প্রবেশ',cta_title2:'ওয়েসিস',cta_sub:'দলে যোগ দিন।',cta_btn:'যাত্রা শুরু →',footer_desc:'ভবিষ্যৎ আশ্রয়।',footer_copy:'© 2026 সহায়ক।'},
+    or:{nav_dashboard:'ଡ୍ୟାଶ୍u200cବୋର୍ଡ →',hero_tag:'ପରମ୍ପରାରେ ମୂଳ, ପ୍ରଯୁକ୍ତିରେ ଶକ୍ତି',hero_title1:'ମାଠ',hero_title2:'ବୁଦ୍ଧି',hero_sub:'ଫସଲ ରକ୍ଷା ପାଇଁ ରୋଗ ଚିହ୍ନଟ।',hero_explore:'ଅନ୍ୱେଷଣ',feat1_badge:'ଚିହ୍ନଟ',feat1_title:'ଫସଲ ରୋଗ ଚିହ୍ନଟ',feat1_desc:'AI ଦ୍ୱାରା ରୋଗ ଚିହ୍ନଟ।',feat2_badge:'ସହାୟକ',feat2_title:'AI ଚ୍ୟାଟ୍ ବଟ',feat2_desc:'ରିଅଲ-ଟାଇମ ମାର୍ଗଦର୍ଶନ।',feat3_badge:'ପୂର୍ବାଭାସ',feat3_title:'ଆବହାୱା ପୂର୍ବାଭାସ',feat3_desc:'ସ୍ଥାନୀୟ ଆବହାୱା ସତର୍କତା।',feat4_badge:'ଭାଷା',feat4_title:'ସ୍ଥାନୀୟ ଭାଷା',feat4_desc:'ଆଞ୍ଚଳିକ ଭାଷା UI।',feat5_badge:'ଅନୁମାନ',feat5_title:'ଅମଳ ବିଶ୍ଳେଷଣ',feat5_desc:'ଡାଟା ଆଧାରିତ ଅନୁମାନ।',feat6_badge:'GPS',feat6_title:'GPS ମ୍ୟାପ',feat6_desc:'ମାଠ ଭୂ-ମ୍ୟାପ।',feat7_badge:'ପରିଚାଳନା',feat7_title:'ସଂସାଧନ ପରିଚାଳନା',feat7_desc:'ସ୍ମାର୍ଟ ଟ୍ରାକ।',feat8_badge:'କ୍ୟାଲେ',feat8_title:'ସ୍ମାର୍ଟ କ୍ୟାଲେ',feat8_desc:'ଅନୁସୂଚୀ।',pillars_label:'ତିନି ପଦ',pillars_heading:'ସଦୃଶ ୱାର୍କଫ୍ଲୋ',p1_title:'ସ୍ମାର୍ଟ ସ୍କ୍ୟାନ',p1_desc:'GPS ଫଟୋ।',p2_title:'AI ନିର୍ଣ୍ଣୟ',p2_desc:'ଦ୍ରୁତ ଚିହ୍ନଟ।',p3_title:'ପରାମର୍ଶ',p3_desc:'AI ମାର୍ଗ।',quote_text:'ଖେତରେ ଜଣ ବିଶେଷଜ୍ଞ ଅଛନ୍ତି ଭଳି ଲାଗୁଛି।',cta_title1:'ଭିତରକୁ',cta_title2:'ଓଏସ',cta_sub:'ଦଳ ସହ ଯୋଗ।',cta_btn:'ଯାତ୍ରା ଆରମ୍ଭ →',footer_desc:'ଭବିଷ୍ୟତ ଆଶ୍ରୟ।',footer_copy:'© 2026 ସହାୟକ।'},    as:{nav_dashboard:'ড্যাশবোর্ড →',hero_tag:'পৰম্পৰাত শিপাই, প্ৰযুক্তিৰে শক্তিশালী',hero_title1:'পথাৰ',hero_title2:'বুদ্ধি',hero_sub:'শস্য ৰক্ষাৰ বাবে ৰোগ চিনাক্তকৰণ।',hero_explore:'অন্বেষণ',feat1_badge:'চিনাক্ত',feat1_title:'শস্য ৰোগ চিনাক্ত',feat1_desc:'AI বিশ্লেষণেৰে ৰোগ চিনাক্ত।',feat2_badge:'সহায়ক',feat2_title:'AI চেটবট',feat2_desc:'ৰিয়েল-টাইম কৃষি নিৰ্দেশনা।',feat3_badge:'পূৰ্বাভাস',feat3_title:'বতৰ পূৰ্বাভাস',feat3_desc:'স্থানীয় বতৰ সতৰ্কতা।',feat4_badge:'ভাষা',feat4_title:'স্থানীয় ভাষা',feat4_desc:'আঞ্চলিক ভাষা UI।',feat5_badge:'পূৰ্বানুমান',feat5_title:'উৎপাদন',feat5_desc:'তথ্য-চালিত পূৰ্বানুমান।',feat6_badge:'GPS',feat6_title:'GPS মেপিং',feat6_desc:'পথাৰ সীমা মেপ।',feat7_badge:'ব্যৱস্থাপনা',feat7_title:'সম্পদ',feat7_desc:'কীটনাশক ট্ৰেকিং।',feat8_badge:'কেলেণ্ডাৰ',feat8_title:'স্মাৰ্ট কেলেণ্ডাৰ',feat8_desc:'স্বয়ংক্ৰিয় চক্ৰ।',pillars_label:'তিনি পদক্ষেপ',pillars_heading:'নিৰৱচ্ছিন্ন ৱৰ্কফ্লো',p1_title:'স্মাৰ্ট স্কেনিং',p1_desc:'GPS সহ ফটো।',p2_title:'AI ৰোগ নিৰ্ণয়',p2_desc:'তৎক্ষণাৎ ৰোগ চিনাক্ত।',p3_title:'পৰামৰ্শ',p3_desc:'AI নিৰ্দেশনা।',quote_text:'পথাৰত এজন বিশেষজ্ঞ পাশতে আছে যেন।',cta_title1:'ভিতৰলৈ',cta_title2:'অওএচিছ',cta_sub:'দলত যোগ।',cta_btn:'যাত্ৰা আৰম্ভ →',footer_desc:'ভৱিষ্যৎ আশ্ৰয়।',footer_copy:'© 2026 সহায়ক।'},    ur:{nav_dashboard:'ڈیش بورڈ ←',hero_tag:'روایت میں جڑیں، ٹیکنالوجی سے قوت',hero_title1:'کھیت',hero_title2:'ذہانت',hero_sub:'فصل کی حفاظت کے لیے بیماری کی شناخت۔',hero_explore:'دریافت',feat1_badge:'شناخت',feat1_title:'فصل بیماری',feat1_desc:'AI تجزیہ۔',feat2_badge:'مددگار',feat2_title:'AI چیٹ بوٹ',feat2_desc:'زرعی رہنمائی۔',feat3_badge:'موسم',feat3_title:'موسم پیشگوئی',feat3_desc:'موسم اور بارش انتباہ۔',feat4_badge:'زبانیں',feat4_title:'مقامی زبان',feat4_desc:'زبان UI۔',feat5_badge:'تجزیہ',feat5_title:'پیداوار تجزیہ',feat5_desc:'ڈیٹا پیشگوئی۔',feat6_badge:'GPS',feat6_title:'GPS نقشہ',feat6_desc:'کھیت نقشہ۔',feat7_badge:'انتظام',feat7_title:'وسائل',feat7_desc:'نگرانی۔',feat8_badge:'کیلنڈر',feat8_title:'سمارٹ کیلنڈر',feat8_desc:'خودکار شیڈول۔',pillars_label:'تین قدم',pillars_heading:'ہموار ورک فلو',p1_title:'سمارٹ اسکین',p1_desc:'GPS فوٹو۔',p2_title:'AI تشخیص',p2_desc:'فوری شناخت۔',p3_title:'مشاورت',p3_desc:'AI رہنمائی۔',quote_text:'ایک ماہر پاس کھڑا ہے جیسا لگتا ہے۔',cta_title1:'اندر آئیں',cta_title2:'نخلستان',cta_sub:'ٹیم سے جڑیں۔',cta_btn:'سفر شروع کریں ←',footer_desc:'مستقبل کی پناہ گاہ۔',footer_copy:'© 2026 سہایک۔'},    bho:{nav_dashboard:'डैशबोर्ड →',hero_tag:'परंपरा में जड़, तकनीक से ताकत',hero_title1:'खेत',hero_title2:'अकल',hero_sub:'फसल बचाव खातिर रोग पहचान।',hero_explore:'खोजीं',feat1_badge:'पहचान',feat1_title:'फसल रोग',feat1_desc:'AI पहचान।',feat2_badge:'सहायक',feat2_title:'AI चैटबॉट',feat2_desc:'खेती मार्गदर्शन।',feat3_badge:'मौसम',feat3_title:'मौसम अनुमान',feat3_desc:'मौसम अलर्ट।',feat4_badge:'भाषा',feat4_title:'भाषा समर्थन',feat4_desc:'भाषा UI।',feat5_badge:'अनुमान',feat5_title:'उपज विश्लेषण',feat5_desc:'अनुमान।',feat6_badge:'GPS',feat6_title:'GPS मैपिंग',feat6_desc:'खेत मैप।',feat7_badge:'प्रबंधन',feat7_title:'संसाधन',feat7_desc:'ट्रैकिंग।',feat8_badge:'कैलेंडर',feat8_title:'कैलेंडर',feat8_desc:'शेड्यूल।',pillars_label:'तीन पदक्षेप',pillars_heading:'खेत वर्कफ्लो',p1_title:'स्मार्ट स्कैन',p1_desc:'GPS फोटो।',p2_title:'AI निदान',p2_desc:'तुरंत पहचान।',p3_title:'सलाह',p3_desc:'AI मार्गदर्शन।',quote_text:'खेत में विशेषज्ञ बगल में बा लागेला।',cta_title1:'अंदर आईं',cta_title2:'ओएसिस',cta_sub:'बेहतर दुनिया बनावे ग्रुप जुड़ीं।',cta_btn:'यात्रा शुरू →',footer_desc:'भविष्य बनावे के ठिकाना।',footer_copy:'© 2026 सहायक।'},    mai:{nav_dashboard:'डैशबोर्ड →',hero_tag:'परम्परामे जड़, तकनीकसँ शक्ति',hero_title1:'खेत',hero_title2:'बुद्धि',hero_sub:'फसलक रक्षा लेल रोग पहचान।',hero_explore:'अन्वेषण',feat1_badge:'पहचान',feat1_title:'फसल रोग',feat1_desc:'AI विश्लेषण।',feat2_badge:'सहायक',feat2_title:'AI चैटबॉट',feat2_desc:'कृषि मार्गदर्शन।',feat3_badge:'पूर्वानुमान',feat3_title:'मौसम',feat3_desc:'मौसम सचेतना।',feat4_badge:'भाषा',feat4_title:'भाषा',feat4_desc:'भाषा UI।',feat5_badge:'अनुमान',feat5_title:'उपज',feat5_desc:'पूर्वानुमान।',feat6_badge:'GPS',feat6_title:'GPS मैप',feat6_desc:'खेत सीमा।',feat7_badge:'प्रबंधन',feat7_title:'संसाधन',feat7_desc:'ट्रैकिंग।',feat8_badge:'कैलेंडर',feat8_title:'कैलेंडर',feat8_desc:'अनुसूची।',pillars_label:'तीन चरण',pillars_heading:'खेत कार्यप्रवाह',p1_title:'स्मार्ट स्कैन',p1_desc:'GPS फोटो।',p2_title:'AI निदान',p2_desc:'पहचान।',p3_title:'सलाह',p3_desc:'AI।',quote_text:'खेतमे विशेषज्ञ पास छथि जेना।',cta_title1:'अंदर',cta_title2:'ओएसिस',cta_sub:'समूहमे शामिल।',cta_btn:'यात्रा शुरू →',footer_desc:'भविष्य आश्रय।',footer_copy:'© 2026 सहायक।'},    kok:{nav_dashboard:'डॅशबोर्ड →',hero_tag:'परंपरेंत मुळां, तंत्रज्ञानान शक्ती',hero_title1:'शेत',hero_title2:'बुद्धी',hero_sub:'पिकाचें रक्षण करपाक रोग ओळख.',hero_explore:'सोध',feat1_badge:'ओळख',feat1_title:'पीक रोग',feat1_desc:'AI ओळख.',feat2_badge:'सहाय्यक',feat2_title:'AI चॅटबॉट',feat2_desc:'शेती मार्गदर्शन.',feat3_badge:'अंदाज',feat3_title:'हवामान',feat3_desc:'हवामान इशारे.',feat4_badge:'भाशा',feat4_title:'भाशा',feat4_desc:'भाशा UI.',feat5_badge:'अंदाज',feat5_title:'उत्पादन',feat5_desc:'अंदाज.',feat6_badge:'GPS',feat6_title:'GPS मॅप',feat6_desc:'शेत सीमा.',feat7_badge:'व्यवस्थापन',feat7_title:'साधन',feat7_desc:'ट्रॅकिंग.',feat8_badge:'कॅलेंडर',feat8_title:'कॅलेंडर',feat8_desc:'अनुसूची.',pillars_label:'तीन पावलें',pillars_heading:'खेत वर्कफ्लो',p1_title:'स्मार्ट स्कॅन',p1_desc:'GPS फोटो.',p2_title:'AI निदान',p2_desc:'पहचान.',p3_title:'सल्लो',p3_desc:'AI.',quote_text:'शेतांत विशेषज्ञ लागींच आसा असो भासता.',cta_title1:'आंत वच',cta_title2:'ओएसिस',cta_sub:'जथ्थ्यांत मेळ.',cta_btn:'प्रवास सुरू कर →',footer_desc:'भविश्य आसरो.',footer_copy:'© 2026 सहायक.'},    ne:{nav_dashboard:'ड्यासबोर्ड →',hero_tag:'परम्परामा जरिएका, प्रविधिमा सशक्त',hero_title1:'खेत',hero_title2:'बुद्धि',hero_sub:'बाली रक्षाको लागि रोग पहिचान।',hero_explore:'अन्वेषण',feat1_badge:'पहिचान',feat1_title:'बाली रोग',feat1_desc:'AI विश्लेषण।',feat2_badge:'सहायक',feat2_title:'AI च्याटबोट',feat2_desc:'कृषि मार्गदर्शन।',feat3_badge:'पूर्वानुमान',feat3_title:'मौसम',feat3_desc:'मौसम सचेतना।',feat4_badge:'भाषा',feat4_title:'भाषा',feat4_desc:'भाषा UI।',feat5_badge:'अनुमान',feat5_title:'उत्पादन',feat5_desc:'पूर्वानुमान।',feat6_badge:'GPS',feat6_title:'GPS म्यापिङ',feat6_desc:'खेत सीमा।',feat7_badge:'व्यवस्थापन',feat7_title:'स्रोत',feat7_desc:'ट्र्याकिङ।',feat8_badge:'क्यालेन्डर',feat8_title:'क्यालेन्डर',feat8_desc:'अनुसूची।',pillars_label:'तीन चरण',pillars_heading:'खेत वर्कफ्लो',p1_title:'स्मार्ट स्क्यान',p1_desc:'GPS फोटो।',p2_title:'AI निदान',p2_desc:'पहिचान।',p3_title:'सल्लाह',p3_desc:'AI।',quote_text:'खेतमा विशेषज्ञ छेउमै छन् जस्तो।',cta_title1:'भित्र',cta_title2:'ओएसिस',cta_sub:'समूहमा सामेल।',cta_btn:'यात्रा सुरु →',footer_desc:'भविष्य आश्रय।',footer_copy:'© 2026 सहायक।'},    doi:{nav_dashboard:'डैशबोर्ड →',hero_tag:'परंपरा च जड़ें, तकनीक कन्नै ताकत',hero_title1:'खेत',hero_title2:'अकल',hero_sub:'फसल दी रखशा लेई बमारी पछाण।',hero_explore:'खोज',feat1_badge:'पछाण',feat1_title:'फसल रोग',feat1_desc:'AI पछाण।',feat2_badge:'मददगार',feat2_title:'AI चैटबोट',feat2_desc:'खेती मार्गदर्शन।',feat3_badge:'मौसम',feat3_title:'मौसम',feat3_desc:'मौसम अलर्ट।',feat4_badge:'बोलियां',feat4_title:'बोली',feat4_desc:'बोली UI।',feat5_badge:'अनुमान',feat5_title:'पैदावार',feat5_desc:'पूर्वानुमान।',feat6_badge:'GPS',feat6_title:'GPS मैप',feat6_desc:'खेत हद।',feat7_badge:'प्रबंधन',feat7_title:'स्रोत',feat7_desc:'ट्रैकिंग।',feat8_badge:'कैलेंडर',feat8_title:'कैलेंडर',feat8_desc:'अनुसूची।',pillars_label:'तिन्न कदम',pillars_heading:'खेत वर्कफ्लो',p1_title:'स्मार्ट स्कैन',p1_desc:'GPS फोटो।',p2_title:'AI निदान',p2_desc:'झट्ट पछाण।',p3_title:'सलाह',p3_desc:'AI।',quote_text:'खेत च विशेषज्ञ कोल खड़ोता जनेआ लगदा ऐ।',cta_title1:'अंदर',cta_title2:'ओएसिस',cta_sub:'ग्रुप जुड़ो।',cta_btn:'सफर शुरू →',footer_desc:'भविक्ख ठिकाना।',footer_copy:'© 2026 सहायक।'},    sa:{nav_dashboard:'सूचनापटलम् →',hero_tag:'परम्परायां मूलम्, प्रौद्योगिक्यां शक्तिः',hero_title1:'क्षेत्रम्',hero_title2:'प्रज्ञा',hero_sub:'शस्यरक्षणाय रोगनिर्धारणम्।',hero_explore:'अन्वेषणम्',feat1_badge:'निर्धारणम्',feat1_title:'शस्यरोगः',feat1_desc:'AI विश्लेषणम्।',feat2_badge:'सहायकः',feat2_title:'AI संवादकः',feat2_desc:'कृषिमार्गदर्शनम्।',feat3_badge:'पूर्वानुमानम्',feat3_title:'वायुमण्डलम्',feat3_desc:'वायुमण्डलसूचना।',feat4_badge:'भाषाः',feat4_title:'भाषाः',feat4_desc:'भाषा UI।',feat5_badge:'अनुमानम्',feat5_title:'उत्पादनम्',feat5_desc:'पूर्वानुमानम्।',feat6_badge:'GPS',feat6_title:'GPS मानचित्रम्',feat6_desc:'क्षेत्रसीमा।',feat7_badge:'प्रबन्धनम्',feat7_title:'साधनम्',feat7_desc:'अनुवर्तनम्।',feat8_badge:'कालदर्शिका',feat8_title:'कालदर्शिका',feat8_desc:'चक्रम्।',pillars_label:'त्रिचरणम्',pillars_heading:'क्षेत्रकार्यप्रवाहः',p1_title:'स्कैनिंग',p1_desc:'GPS चित्रम्।',p2_title:'AI निदानम्',p2_desc:'पहचान।',p3_title:'परामर्शः',p3_desc:'AI।',quote_text:'क्षेत्रे विशेषज्ञः पार्श्वे इव।',cta_title1:'प्रविशतु',cta_title2:'मरूद्यानम्',cta_sub:'समूहे संलग्नताम्।',cta_btn:'यात्रारम्भः →',footer_desc:'भावी आश्रयः।',footer_copy:'© 2026 सहायकः।'}
+  };
+
+  var currentLang = localStorage.getItem('ks_lang') || 'en';
+
+  function applyLang(code) {
+    var translations = T[code] || T['en'];
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (translations[key] !== undefined) el.textContent = translations[key];
+    });
+    var navLink = document.getElementById('nav-dashboard-link');
+    if (navLink && translations.nav_dashboard) navLink.textContent = translations.nav_dashboard;
+    var label = document.getElementById('langBtnLabel');
+    if (label) label.textContent = code.toUpperCase();
+    document.querySelectorAll('.lang-option').forEach(function(opt) {
+      opt.classList.toggle('active', opt.dataset.code === code);
+    });
+    currentLang = code;
+    localStorage.setItem('ks_lang', code);
+  }
+
+  function buildDropdown() {
+    var dd = document.getElementById('langDropdown');
+    if (!dd) return;
+    dd.innerHTML = '';
+    LANGS.forEach(function(lang) {
+      var opt = document.createElement('div');
+      opt.className = 'lang-option' + (lang.code === currentLang ? ' active' : '');
+      opt.dataset.code = lang.code;
+      opt.innerHTML = '<span class="lang-native">' + lang.native + '</span><span class="lang-check">✓</span>';
+      opt.addEventListener('click', function() {
+        applyLang(lang.code);
+        dd.classList.remove('open');
+      });
+      dd.appendChild(opt);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    buildDropdown();
+    applyLang(currentLang);
+
+    var btn = document.getElementById('langBtn');
+    var dd = document.getElementById('langDropdown');
+    if (btn && dd) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dd.classList.toggle('open');
+      });
+      document.addEventListener('click', function() {
+        dd.classList.remove('open');
+      });
+      dd.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    }
+  });
+
+})();
+</script>
 </html>
