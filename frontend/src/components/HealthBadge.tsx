@@ -19,8 +19,9 @@ export default function HealthBadge() {
     setLoading(true);
     setError(null);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-      const res = await fetch(`${backendUrl}/api/v1/health`, {
+      // Use the Next.js rewrite proxy path so the request stays same-origin
+      // (avoids CORS issues when calling the FastAPI backend directly from the browser)
+      const res = await fetch(`/api/v1/health`, {
         cache: 'no-store',
       });
       if (!res.ok) {
