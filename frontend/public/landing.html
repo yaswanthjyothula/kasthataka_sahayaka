@@ -384,19 +384,24 @@
 		}
 
 		.quote-section {
+			min-height: 100vh;
+			display: flex;
 			flex-direction: column;
-			gap: 20px;
-			text-align: center;
-			min-height: 80vh;
+			justify-content: center;
+			align-items: flex-end;
+			text-align: right;
+			padding-right: clamp(24px, 8vw, 140px);
+			padding-left: clamp(24px, 5vw, 60px);
 		}
 
 		.quote-section blockquote {
 			font-family: 'Playfair Display', serif;
-			font-size: clamp(22px, 3.5vw, 42px);
+			font-size: clamp(22px, 3.5vw, 40px);
 			font-weight: 400;
 			font-style: italic;
-			line-height: 1.4;
-			max-width: 720px;
+			line-height: 1.45;
+			max-width: 620px;
+			text-align: right;
 			color: var(--color-heading, rgba(250, 255, 240, 0.95));
 			opacity: 0;
 			transform: translateY(40px);
@@ -717,48 +722,48 @@
 		<section class="section disease-section" id="manifestoSection" data-stage="1">
 			<div class="disease-grid-header" data-reveal>
 				<span>Crop Protection Intelligence</span>
-				<h2>8 Disease Classes & Health Analytics</h2>
+				<h2>End-to-End Crop Health &amp; Smart Management</h2>
 			</div>
 			<div class="disease-grid">
 				<div class="disease-card" data-reveal data-delay="1">
-					<span class="disease-badge">Foliar</span>
-					<h3>Leaf Blast</h3>
-					<p>Spindle-shaped necrotic lesions with grey centers on leaf blades causing early defoliation.</p>
+					<span class="disease-badge">DETECTION</span>
+					<h3>Crop Disease Detection</h3>
+					<p>AI-driven analysis to identify early-stage pathogens, necrotic lesions, and foliar symptoms across crops.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="2">
-					<span class="disease-badge">Panicle</span>
-					<h3>Neck Blast</h3>
-					<p>Blackened rot at the peduncle neck junction leading to panicle breakage and sterile grains.</p>
+					<span class="disease-badge">ASSISTANT</span>
+					<h3>AI Chatbot</h3>
+					<p>Interactive conversational assistant providing real-time agronomic guidance, CIBRC safety advisories, and tailored field solutions.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="3">
-					<span class="disease-badge">Spikelet</span>
-					<h3>Finger Blast</h3>
-					<p>Direct finger & spikelet discoloration obstructing nutrient flow during grain filling.</p>
+					<span class="disease-badge">FORECAST</span>
+					<h3>Weather Forecasting</h3>
+					<p>Real-time local weather updates, microclimate tracking, and predictive rainfall alerts to optimize spraying and field activities.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="4">
-					<span class="disease-badge">Basal</span>
-					<h3>Foot Rot</h3>
-					<p>Stem base collar rot and root damping-off caused by soil-borne fungal pathogens.</p>
+					<span class="disease-badge">LANGUAGES</span>
+					<h3>Local Language Support</h3>
+					<p>Multilingual UI and voice interface supporting regional languages and audio assistance for localized farmer accessibility.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="1">
-					<span class="disease-badge">Spots</span>
-					<h3>Brown Leaf Spot</h3>
-					<p>Oval reddish-brown necrotic spots coalescing across lower and middle leaves.</p>
+					<span class="disease-badge">PREDICTION</span>
+					<h3>Predictive Yield Analytics</h3>
+					<p>Data-driven harvest forecasting based on canopy health, disease severity, and historical growth metrics.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="2">
-					<span class="disease-badge">Spore</span>
-					<h3>Smut Disease</h3>
-					<p>Ovaries converted into dark powdery soral galls reducing grain yield viability.</p>
+					<span class="disease-badge">GEOLOCATION</span>
+					<h3>GPS & Field Mapping</h3>
+					<p>Location-based field boundary mapping, hotspot tracking, and geotagged disease outbreak monitoring.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="3">
-					<span class="disease-badge">Tip Blight</span>
-					<h3>Cercospora Spot</h3>
-					<p>Narrow elongated leaf tip blights reducing canopy photosynthetic efficiency.</p>
+					<span class="disease-badge">MANAGEMENT</span>
+					<h3>Resource Management</h3>
+					<p>Smart inventory and input tracking for pesticides, fertilizers, seeds, and water usage optimization.</p>
 				</div>
 				<div class="disease-card" data-reveal data-delay="4">
-					<span class="disease-badge">Optimal</span>
-					<h3>Healthy Field</h3>
-					<p>Optimal green canopy status with zero necrotic lesion area and strong turgor.</p>
+					<span class="disease-badge">SCHEDULE</span>
+					<h3>Smart Calendar</h3>
+					<p>Automated crop cycle scheduling, spraying timelines, and task reminders tailored to field conditions.</p>
 				</div>
 			</div>
 		</section>
@@ -771,18 +776,18 @@
 			<div class="pillar-grid">
 				<div class="pillar-card" data-reveal data-delay="1">
 					<div class="pillar-num">01</div>
-					<h3>Capture &amp; Quality Gate</h3>
-					<p>1-tap leaf photo capture with real-time OpenCV.js blur variance quality check (&gt;100 threshold) and offline IndexedDB queue.</p>
+					<h3>Smart Field Scanning</h3>
+					<p>1-tap multi-lingual photo capture with automated quality checks, GPS geotagging, and offline queuing.</p>
 				</div>
 				<div class="pillar-card" data-reveal data-delay="2">
 					<div class="pillar-num">02</div>
-					<h3>AI Vision &amp; Score-CAM</h3>
-					<p>Instant vision model ensemble diagnosis across 8 disease classes, 4-tier necrotic area severity grading, and heatmap overlays.</p>
+					<h3>AI Disease Diagnosis</h3>
+					<p>Instant multi-crop vision detection with severity scoring, heatmap overlays, and yield impact predictions.</p>
 				</div>
 				<div class="pillar-card" data-reveal data-delay="3">
 					<div class="pillar-num">03</div>
-					<h3>CIBRC Advisory &amp; Voice</h3>
-					<p>Generative Qdrant RAG advisory backed by deterministic CIBRC safety guardrails, tank-mix knapsack calculations, and voice support.</p>
+					<h3>Advisory &amp; Management</h3>
+					<p>Generative AI chatbot guidance, smart calendar scheduling, weather-driven spraying alerts, and input tracking.</p>
 				</div>
 			</div>
 		</section>
@@ -790,8 +795,7 @@
 
 
 		<section class="section quote-section" data-stage="4">
-			<blockquote data-reveal>"The earth does not belong to us. We belong to the earth — and our code should reflect that truth."</blockquote>
-			<span class="quote-attr" data-reveal data-delay="1">— Lena Ashford, Founder</span>
+			<blockquote data-reveal>"It feels like having an agricultural expert standing right beside me in the field, helping me make the right choices for my soil and safeguard my family's harvest."</blockquote>
 		</section>
 
 		<section class="section cta-section" id="ctaSection" data-stage="5">
