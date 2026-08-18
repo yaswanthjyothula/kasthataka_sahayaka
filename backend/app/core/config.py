@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     QDRANT_URL: str = "http://localhost:6333"
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/ragirakshak"
-    WEATHER_API_KEY: str = "mock-key"
+    WEATHER_API_KEY: str = "fbcb5222fdf88744e6ba4f9dd53d41b5"
 
     model_config = SettingsConfigDict(
         env_file=".env",
