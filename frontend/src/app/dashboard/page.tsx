@@ -225,12 +225,14 @@ export default function Dashboard() {
   const [sowingYYYY, setSowingYYYY] = useState<string>('');
   const [soilType, setSoilType] = useState<string>('');
   const [fieldLandAcres, setFieldLandAcres] = useState<string>('');
+  const [riceVarietyDuration, setRiceVarietyDuration] = useState<string>('');
+  const [soilOrganicCarbon, setSoilOrganicCarbon] = useState<string>('');
 
   // Saved / submitted context (drives calendar & analytics)
   const [savedCropContext, setSavedCropContext] = useState<{
     cropType: string; cropTypeLabel: string; growthStage: string;
     sowingDate: string; soilType: string; landAcres: string;
-    location: string;
+    location: string; riceVarietyDuration: string; soilOrganicCarbon: string;
   } | null>(null);
   const [cropDetailsSaved, setCropDetailsSaved] = useState<boolean>(false);
   const lookupPincode = async (pin: string) => {
@@ -267,6 +269,8 @@ export default function Dashboard() {
       soilType,
       landAcres: fieldLandAcres,
       location: pincodeLocation,
+      riceVarietyDuration,
+      soilOrganicCarbon,
     });
     setCropDetailsSaved(true);
     setActiveTab('calendar');
@@ -1017,8 +1021,11 @@ Your job:
                   <select
                     value={cropType}
                     onChange={(e) => {
-                      setCropType(e.target.value);
+                      const val = e.target.value;
+                      setCropType(val);
                       setCropTypeLabel(e.target.options[e.target.selectedIndex].text);
+                      // Reset rice-specific field when switching to a non-rice crop
+                      if (val !== 'rice') setRiceVarietyDuration('');
                     }}
                     className="w-full border border-emerald-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-emerald-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="">Select crop type…</option>
@@ -1362,6 +1369,65 @@ Your job:
                       <option value="heavy_clay">Heavy Clay — Waterlogging prone, paddy-suited</option>
                     </optgroup>
                   </select>
+                </div>
+
+                {/* Rice Variety Duration — only shown when crop is Rice */}
+                {cropType === 'rice' && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
+                      Rice Variety Duration
+                    </label>
+                    <p className="text-[11px] text-slate-500 -mt-1">Are you using short, medium, or long-duration rice varieties?</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        { value: 'short',  label: 'Short Duration',  sub: '> 2 months (60–120 days)' },
+                        { value: 'medium', label: 'Medium Duration', sub: '> 4 months (120–150 days)' },
+                        { value: 'long',   label: 'Long Duration',   sub: '> 5 months (150+ days)' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setRiceVarietyDuration(opt.value)}
+                          className={`flex flex-col items-start px-4 py-3 rounded-xl border text-left transition-all ${
+                            riceVarietyDuration === opt.value
+                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                              : 'bg-emerald-50/40 border-emerald-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-400'
+                          }`}
+                        >
+                          <span className="text-xs font-bold">{opt.label}</span>
+                          <span className={`text-[10px] mt-0.5 ${riceVarietyDuration === opt.value ? 'text-emerald-100' : 'text-slate-400'}`}>{opt.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Soil Organic Carbon Status */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-emerald-950 uppercase tracking-wide">Soil Organic Carbon Status</label>
+                  <p className="text-[11px] text-slate-500 -mt-1">Do you have a soil health card report indicating any specific organic carbon deficiencies?</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { value: 'deficient', label: 'Yes (Deficient)', sub: 'Soil health card shows low OC', icon: '⚠️' },
+                      { value: 'no_deficiency', label: 'No (No Deficiency)', sub: 'OC levels are adequate', icon: '✅' },
+                      { value: 'no_card', label: 'No Soil Health Card', sub: 'Card not available', icon: '📋' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSoilOrganicCarbon(opt.value)}
+                        className={`flex flex-col items-start px-4 py-3 rounded-xl border text-left transition-all ${
+                          soilOrganicCarbon === opt.value
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                            : 'bg-emerald-50/40 border-emerald-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-400'
+                        }`}
+                      >
+                        <span className="text-sm mb-0.5">{opt.icon}</span>
+                        <span className="text-xs font-bold">{opt.label}</span>
+                        <span className={`text-[10px] mt-0.5 ${soilOrganicCarbon === opt.value ? 'text-emerald-100' : 'text-slate-400'}`}>{opt.sub}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Submit */}
