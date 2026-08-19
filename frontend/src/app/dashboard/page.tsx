@@ -1054,8 +1054,12 @@ Your job:
           }`}
         >
           <div className="px-2 pt-1">
+<<<<<<< HEAD
             <h2 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">{tNavLabel}</h2>
             <p className="text-[11px] text-emerald-700">{tNavSub}</p>
+=======
+            <h2 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Dashboard Navigation</h2>
+>>>>>>> 0e18b9d8d0ea0003c46f8a751d29f2991fbf0a38
           </div>
 
           <nav className="flex-1 flex flex-col gap-1.5">
