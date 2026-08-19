@@ -1,25 +1,14 @@
 // ─── Indian Language Registry ─────────────────────────────────────────────────
 // To add a new language: just add an entry here. The AI translator handles the rest.
 export const LANGUAGES = [
-  { code: 'en',  native: 'English',   name: 'English' },
-  { code: 'hi',  native: 'हिन्दी',     name: 'Hindi' },
-  { code: 'kn',  native: 'ಕನ್ನಡ',      name: 'Kannada' },
-  { code: 'te',  native: 'తెలుగు',     name: 'Telugu' },
-  { code: 'ta',  native: 'தமிழ்',      name: 'Tamil' },
-  { code: 'ml',  native: 'മലയാളം',     name: 'Malayalam' },
-  { code: 'mr',  native: 'मराठी',      name: 'Marathi' },
-  { code: 'gu',  native: 'ગુજરાતી',    name: 'Gujarati' },
-  { code: 'pa',  native: 'ਪੰਜਾਬੀ',     name: 'Punjabi' },
-  { code: 'or',  native: 'ଓଡ଼ିଆ',       name: 'Odia' },
-  { code: 'bn',  native: 'বাংলা',       name: 'Bengali' },
-  { code: 'as',  native: 'অসমীয়া',     name: 'Assamese' },
-  { code: 'ur',  native: 'اردو',        name: 'Urdu' },
-  { code: 'bho', native: 'भोजपुरी',     name: 'Bhojpuri' },
-  { code: 'mai', native: 'मैथिली',      name: 'Maithili' },
-  { code: 'kok', native: 'कोंकणी',      name: 'Konkani' },
-  { code: 'ne',  native: 'नेपाली',      name: 'Nepali' },
-  { code: 'doi', native: 'डोगरी',       name: 'Dogri' },
-  { code: 'sa',  native: 'संस्कृत',      name: 'Sanskrit' },
+  { code: 'en',  native: 'English',    name: 'English' },
+  { code: 'hi',  native: 'हिन्दी',      name: 'Hindi' },
+  { code: 'te',  native: 'తెలుగు',      name: 'Telugu' },
+  { code: 'ta',  native: 'தமிழ்',       name: 'Tamil' },
+  { code: 'kn',  native: 'ಕನ್ನಡ',       name: 'Kannada' },
+  { code: 'ml',  native: 'മലയാളം',      name: 'Malayalam' },
+  { code: 'pa',  native: 'ਪੰਜਾਬੀ',      name: 'Punjabi' },
+  { code: 'or',  native: 'ଓଡ଼ିଆ',        name: 'Odia' },
 ] as const;
 
 export type LangCode = typeof LANGUAGES[number]['code'];

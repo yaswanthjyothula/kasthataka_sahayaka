@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { LanguageProvider, useLanguage, useT } from '@/context/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
   Camera,
   Calendar,
@@ -45,6 +47,84 @@ function getTime(): string {
 }
 
 export default function Dashboard() {
+  return (
+    <LanguageProvider>
+      <DashboardContent />
+    </LanguageProvider>
+  );
+}
+
+function DashboardContent() {
+  const { lang } = useLanguage();
+
+  // ─── UI Translations ────────────────────────────────────────────────────────
+  // Add a new useT() call here for any new UI text — translation is automatic.
+  const tSmartDash   = useT('smart_dash',    'Smart Agriculture Dashboard');
+  const tLandingPage = useT('landing_page',  'Landing Page');
+  const tPersona     = useT('persona',       'Persona: Farmer');
+  const tNavLabel    = useT('nav_label',     'Dashboard Navigation');
+  const tNavSub      = useT('nav_sub',       'Finger Millet Protection Suite');
+
+  const tMenu1 = useT('menu_1', 'Share Crop & Land Details');
+  const tMenu2 = useT('menu_2', 'Crop Disease Detection');
+  const tMenu3 = useT('menu_3', 'Smart Agriculture Calendar');
+  const tMenu4 = useT('menu_4', 'Resource Management');
+  const tMenu5 = useT('menu_5', 'Weather Forecasting');
+  const tMenu6 = useT('menu_6', 'Predictive Yield Analytics');
+  const tMenu7 = useT('menu_7', 'Disease Based Products');
+
+  const tChatAdvisor   = useT('chat_advisor',   'AI Crop Advisor');
+  const tChatHeading   = useT('chat_heading',   'KisanMitra Crop AI Advisor');
+  const tChatSub       = useT('chat_sub',       'Ask questions, capture/upload leaf images, or use voice input for real-time crop disease diagnosis & treatment.');
+  const tChatWelcome   = useT('chat_welcome',   'Namaste! I am your KisanMitra AI Advisor. Tap the Camera button to open the live leaf camera viewfinder, upload an image, or use the Mic to ask questions about crop disease symptoms and treatment.');
+  const tChatQ1        = useT('chat_q1',        'How do I identify and treat Leaf Blast in Finger Millet?');
+  const tChatQ2        = useT('chat_q2',        'What is the recommended CIBRC dosage for Tricyclazole 75% WP?');
+  const tChatQ3        = useT('chat_q3',        'Check 72-hour humidity & weather risk for Neck Blast');
+  const tChatQ4        = useT('chat_q4',        'Symptoms of Foot Rot and Brown Spot in early growth');
+  const tChatPlaceholder = useT('chat_placeholder', 'Ask about crop diseases, symptoms, or remedies...');
+  const tChatListening   = useT('chat_listening',   'Listening... Speak now...');
+  const tChatAttached    = useT('chat_attached',    'Leaf Photo Attached');
+  const tSuggestedQ      = useT('suggested_q',      'Suggested Quick Questions:');
+
+  const tCropType    = useT('crop_type',    'Crop Type');
+  const tGrowthStage = useT('growth_stage', 'Growth Stage');
+  const tSowingDate  = useT('sowing_date',  'Sowing Date');
+  const tSoilType    = useT('soil_type',    'Soil Type');
+  const tLandArea    = useT('land_area',    'Land Area (in Acres)');
+  const tPincode     = useT('pincode',      'Pincode (for location)');
+  const tSaveBtn     = useT('save_btn',     'Save & Continue to Calendar');
+
+  const tWxHeading   = useT('wx_heading',   'Real-Time Weather & Crop Disease Risk');
+  const tWxSub       = useT('wx_sub',       'Live temperature, humidity, wind, rain probability and 5-day forecast with blast spore proliferation risk based on your exact location.');
+  const tWxEnableTitle = useT('wx_enable_title', 'Enable Location for Accurate Forecast');
+  const tWxEnableSub   = useT('wx_enable_sub',   'We need your location to fetch real-time weather data, humidity levels, and crop disease risk specific to your farm.');
+  const tWxEnableBtn   = useT('wx_enable_btn',   'Turn On Location');
+  const tWxEnableNote  = useT('wx_enable_note',  'Your location is only used to fetch weather and is never stored.');
+  const tWxLocating    = useT('wx_locating',     'Detecting your location...');
+  const tWxLocatingSub = useT('wx_locating_sub', 'Please allow location access when prompted by your browser.');
+  const tWxLoading     = useT('wx_loading',      'Fetching live weather data...');
+  const tWxRefresh     = useT('wx_refresh',      'Refresh');
+  const tWxRiskLabel   = useT('wx_risk_label',   'Blast Spore Risk');
+  const tWxAdvisory    = useT('wx_advisory',     'Crop Advisory — Live Conditions');
+  const tWx5day        = useT('wx_5day',         '5-Day Forecast');
+  const tWxSearch      = useT('wx_search',       'Search city, district or village… e.g. Bengaluru, Warangal');
+  const tWxSearchBtn   = useT('wx_search_btn',   'Search');
+  const tWxMyLoc       = useT('wx_my_loc',       'My Location');
+  const tWxShowing     = useT('wx_showing',      'Showing weather for:');
+
+  const tViewfinder  = useT('viewfinder',  'Leaf Camera Viewfinder');
+  const tAlignLeaf   = useT('align_leaf',  'Align leaf inside frame');
+  const tSnapBtn     = useT('snap_btn',    'Snap Photo');
+  const tCancelBtn   = useT('cancel_btn',  'Cancel');
+  const tOpenCam     = useT('open_cam',    'Open System Camera Shutter');
+
+  const tCIBRC       = useT('cibrc_heading', 'CIBRC Approved Products');
+  const tCIBRCSub    = useT('cibrc_sub',     'Pre-approved chemical & bio-fungicide treatments validated by rule-based food-safety guardrails.');
+  const tBuyNow      = useT('buy_now',       'Buy Now →');
+  const tCIBRCPassed = useT('cibrc_passed',  'CIBRC Passed');
+  const tDosage      = useT('dosage',        'Dosage:');
+  const tBrand       = useT('brand_lbl',     'Brand:');
+
   const [activeTab, setActiveTab] = useState<string>('detection');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
@@ -53,7 +133,7 @@ export default function Dashboard() {
     {
       id: '1',
       sender: 'bot',
-      text: 'Namaste! I am your KisanMitra AI Advisor. Tap the Camera button to open the live leaf camera viewfinder, upload an image, or use the Mic to ask questions about crop disease symptoms and treatment.',
+      text: tChatWelcome,
       time: '—',
     },
   ]);
@@ -689,27 +769,22 @@ export default function Dashboard() {
     ];
   };
   const menuItems = [
-    { id: 'cropdetails', label: 'Share Crop & Land Details', icon: ClipboardList, badge: 'Setup' },
-    { id: 'detection', label: 'Crop Disease Detection', icon: Camera, badge: 'Phase 2' },
-    { id: 'calendar', label: 'Smart Agriculture Calendar', icon: Calendar, badge: 'Planning' },
-    { id: 'resources', label: 'Resource Management', icon: Layers, badge: 'Tank-Mix' },
-    { id: 'weather', label: 'Weather Forecasting', icon: CloudSun, badge: '72h Risk' },
-    { id: 'analytics', label: 'Predictive Yield Analytics', icon: TrendingUp, badge: 'Yield AI' },
-    { id: 'products', label: 'Disease Based Products', icon: PackageCheck, badge: 'CIBRC Safe' },
+    { id: 'cropdetails', label: tMenu1, icon: ClipboardList, badge: useT('badge_1', 'Setup') },
+    { id: 'detection',   label: tMenu2, icon: Camera,        badge: useT('badge_2', 'Phase 2') },
+    { id: 'calendar',    label: tMenu3, icon: Calendar,      badge: useT('badge_3', 'Planning') },
+    { id: 'resources',   label: tMenu4, icon: Layers,        badge: useT('badge_4', 'Tank-Mix') },
+    { id: 'weather',     label: tMenu5, icon: CloudSun,      badge: useT('badge_5', '72h Risk') },
+    { id: 'analytics',   label: tMenu6, icon: TrendingUp,    badge: useT('badge_6', 'Yield AI') },
+    { id: 'products',    label: tMenu7, icon: PackageCheck,  badge: useT('badge_7', 'CIBRC Safe') },
   ];
 
-  const quickPrompts = [
-    'How do I identify and treat Leaf Blast in Finger Millet?',
-    'What is the recommended CIBRC dosage for Tricyclazole 75% WP?',
-    'Check 72-hour humidity & weather risk for Neck Blast',
-    'Symptoms of Foot Rot and Brown Spot in early growth',
-  ];
+  const quickPrompts = [tChatQ1, tChatQ2, tChatQ3, tChatQ4];
 
   useEffect(() => {
     setMessages((prev) =>
-      prev.map((msg) => (msg.id === '1' ? { ...msg, time: getTime() } : msg))
+      prev.map((msg) => (msg.id === '1' ? { ...msg, time: getTime(), text: tChatWelcome } : msg))
     );
-  }, []);
+  }, [tChatWelcome]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -767,11 +842,14 @@ export default function Dashboard() {
     const text = textToSend || inputText;
     if (!text.trim() && !selectedImage) return;
 
+    // Capture image snapshot before clearing state
+    const imageSnapshot = selectedImage;
+
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
       text: text.trim(),
-      image: selectedImage || undefined,
+      image: imageSnapshot || undefined,
       time: getTime(),
     };
 
@@ -787,19 +865,44 @@ export default function Dashboard() {
         ? `Farmer's crop: ${ctx.cropTypeLabel}${ctx.growthStage ? `, at ${ctx.growthStage} stage` : ''}${ctx.landAcres ? `, ${ctx.landAcres} acres` : ''}${ctx.location ? `, located in ${ctx.location}` : ''}.`
         : 'Crop: Finger Millet (Ragi) — general advisory.';
 
+      const { LANGUAGES: LANGS } = await import('@/lib/i18n');
+      const langMeta = LANGS.find(l => l.code === lang);
+      const langName = langMeta?.name ?? 'English';
+      const langNative = langMeta?.native ?? 'English';
+
       const systemPrompt = `You are KisanMitra, an expert AI crop disease advisor for Indian farmers specialising in finger millet (ragi) and other Indian crops.
 ${cropInfo}
+IMPORTANT: The farmer has selected "${langNative}" (${langName}) as their language. You MUST respond ENTIRELY in ${langName}. Every word of your response must be in ${langName} script. Do not mix English unless it is a proper noun like KisanMitra, CIBRC, GPS, or a chemical name like Tricyclazole.
 Your job:
 1. DETECT diseases from described or photographed symptoms — give a confident diagnosis with the disease name, causative organism, and severity.
-2. RECOMMEND specific CIBRC-approved products with exact dosages (Tricyclazole 75% WP, Pseudomonas fluorescens, Mancozeb 75% WP, Carbendazim 50% WP, etc.).
-3. SUGGEST when and how to spray (timing, water volume, knapsack pump calculations).
-4. WARN about weather-based risk (high humidity >85%, leaf wetness >10 hrs = spray immediately).
-5. Keep responses concise, practical, and farmer-friendly. Use bullet points for recommendations.
-6. Always mention 1–2 specific product names and dosages in every disease-related answer.`;
+2. If an IMAGE is provided, carefully analyse the visual symptoms: colour, shape, size, distribution and location of lesions, spots, discolouration, or abnormalities on the leaf/stem/fruit. State exactly what you see.
+3. RECOMMEND specific CIBRC-approved products with exact dosages (Tricyclazole 75% WP, Pseudomonas fluorescens, Mancozeb 75% WP, Carbendazim 50% WP, etc.).
+4. SUGGEST when and how to spray (timing, water volume, knapsack pump calculations).
+5. WARN about weather-based risk (high humidity >85%, leaf wetness >10 hrs = spray immediately).
+6. Keep responses concise, practical, and farmer-friendly. Use bullet points for recommendations.
+7. Always mention 1–2 specific product names and dosages in every disease-related answer.
+8. Structure image diagnoses as: 🔍 Visual Observation → 🦠 Diagnosis → 💊 Treatment → ⚠️ Prevention.`;
 
-      const userContent = selectedImage
-        ? `${text.trim()}\n\n[Farmer has attached a leaf photo for disease diagnosis. Analyse symptoms described and suggest treatment.]`
-        : text.trim();
+      // Build multimodal message content — send actual image data to vision model
+      type ContentPart =
+        | { type: 'text'; text: string }
+        | { type: 'image_url'; image_url: { url: string } };
+
+      let userMessageContent: string | ContentPart[];
+
+      if (imageSnapshot) {
+        // Multimodal: text + base64 image for vision analysis
+        const parts: ContentPart[] = [];
+        if (text.trim()) {
+          parts.push({ type: 'text', text: text.trim() });
+        } else {
+          parts.push({ type: 'text', text: 'Please analyse this crop image and diagnose any diseases you can see. Provide detailed observations, disease name, severity, and treatment recommendations.' });
+        }
+        parts.push({ type: 'image_url', image_url: { url: imageSnapshot } });
+        userMessageContent = parts;
+      } else {
+        userMessageContent = text.trim();
+      }
 
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -813,7 +916,7 @@ Your job:
           model: 'google/gemma-4-26b-a4b-it:free',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userContent },
+            { role: 'user', content: userMessageContent },
           ],
         }),
       });
@@ -915,21 +1018,22 @@ Your job:
               <h1 className="font-extrabold text-lg text-emerald-950 tracking-tight leading-none flex items-center gap-2">
                 KisanMitra
               </h1>
-              <span className="text-[11px] text-emerald-700 font-mono font-medium">Smart Agriculture Dashboard</span>
+              <span className="text-[11px] text-emerald-700 font-mono font-medium">{tSmartDash}</span>
             </div>
           </Link>
         </div>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
           <Link
             href="/"
             className="hidden xs:inline-flex items-center gap-1.5 text-xs text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-full font-medium transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Landing Page</span>
+            <span>{tLandingPage}</span>
           </Link>
           <div className="text-xs bg-emerald-100 text-emerald-900 border border-emerald-300 px-3 py-1 rounded-full font-mono font-bold shadow-xs">
-            Persona: Farmer
+            {tPersona}
           </div>
         </div>
       </header>
@@ -950,8 +1054,8 @@ Your job:
           }`}
         >
           <div className="px-2 pt-1">
-            <h2 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Dashboard Navigation</h2>
-            <p className="text-[11px] text-emerald-700">Finger Millet Protection Suite</p>
+            <h2 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">{tNavLabel}</h2>
+            <p className="text-[11px] text-emerald-700">{tNavSub}</p>
           </div>
 
           <nav className="flex-1 flex flex-col gap-1.5">
@@ -1449,12 +1553,10 @@ Your job:
                 <div>
                   <div className="inline-flex items-center gap-1.5 bg-emerald-900/40 text-emerald-200 text-xs px-3 py-1 rounded-full border border-emerald-500/30 font-mono mb-1.5">
                     <Bot className="w-3.5 h-3.5 text-emerald-300" />
-                    <span>AI Crop Advisor</span>
+                    <span>{tChatAdvisor}</span>
                   </div>
-                  <h2 className="text-xl font-extrabold text-white tracking-tight">KisanMitra Crop AI Advisor</h2>
-                  <p className="text-xs text-emerald-100 mt-0.5">
-                    Ask questions, capture/upload leaf images, or use voice input for real-time crop disease diagnosis &amp; treatment.
-                  </p>
+                  <h2 className="text-xl font-extrabold text-white tracking-tight">{tChatHeading}</h2>
+                  <p className="text-xs text-emerald-100 mt-0.5">{tChatSub}</p>
                 </div>
               </div>
 
@@ -1516,7 +1618,7 @@ Your job:
 
                 {/* Quick Prompts */}
                 <div className="pt-3 border-t border-slate-100 my-3">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Suggested Quick Questions:</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">{tSuggestedQ}</span>
                   <div className="flex flex-wrap gap-2">
                     {quickPrompts.map((prompt, idx) => (
                       <button
@@ -1536,7 +1638,7 @@ Your job:
                     <div className="flex items-center gap-2">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={selectedImage} alt="Preview" className="w-8 h-8 rounded-lg object-cover" />
-                      <span className="text-xs text-emerald-900 font-medium">Leaf Photo Attached</span>
+                      <span className="text-xs text-emerald-900 font-medium">{tChatAttached}</span>
                     </div>
                     <button
                       onClick={() => setSelectedImage(null)}
