@@ -80,6 +80,9 @@ export default function Dashboard() {
   const [cropTypeLabel, setCropTypeLabel] = useState<string>('');
   const [growthStage, setGrowthStage] = useState<string>('');
   const [sowingDate, setSowingDate] = useState<string>('');
+  const [sowingDD, setSowingDD] = useState<string>('');
+  const [sowingMM, setSowingMM] = useState<string>('');
+  const [sowingYYYY, setSowingYYYY] = useState<string>('');
   const [soilType, setSoilType] = useState<string>('');
   const [fieldLandAcres, setFieldLandAcres] = useState<string>('');
 
@@ -1009,12 +1012,66 @@ export default function Dashboard() {
                 {/* Sowing Date */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-emerald-950 uppercase tracking-wide">Sowing Date <span className="text-slate-400 font-normal normal-case">(optional)</span></label>
-                  <input
-                    type="date"
-                    value={sowingDate}
-                    onChange={(e) => setSowingDate(e.target.value)}
-                    className="w-full border border-emerald-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-emerald-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Day */}
+                    <select
+                      value={sowingDD}
+                      onChange={(e) => {
+                        const dd = e.target.value;
+                        setSowingDD(dd);
+                        if (dd && sowingMM && sowingYYYY) setSowingDate(`${sowingYYYY}-${sowingMM}-${dd}`);
+                        else setSowingDate('');
+                      }}
+                      className="border border-emerald-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 bg-emerald-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">DD</option>
+                      {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                    {/* Month */}
+                    <select
+                      value={sowingMM}
+                      onChange={(e) => {
+                        const mm = e.target.value;
+                        setSowingMM(mm);
+                        if (sowingDD && mm && sowingYYYY) setSowingDate(`${sowingYYYY}-${mm}-${sowingDD}`);
+                        else setSowingDate('');
+                      }}
+                      className="border border-emerald-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 bg-emerald-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">MM</option>
+                      {[
+                        ['01','Jan'],['02','Feb'],['03','Mar'],['04','Apr'],
+                        ['05','May'],['06','Jun'],['07','Jul'],['08','Aug'],
+                        ['09','Sep'],['10','Oct'],['11','Nov'],['12','Dec'],
+                      ].map(([val, label]) => (
+                        <option key={val} value={val}>{val} — {label}</option>
+                      ))}
+                    </select>
+                    {/* Year */}
+                    <select
+                      value={sowingYYYY}
+                      onChange={(e) => {
+                        const yyyy = e.target.value;
+                        setSowingYYYY(yyyy);
+                        if (sowingDD && sowingMM && yyyy) setSowingDate(`${yyyy}-${sowingMM}-${sowingDD}`);
+                        else setSowingDate('');
+                      }}
+                      className="border border-emerald-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 bg-emerald-50/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">YYYY</option>
+                      {Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() - 1 + i)).map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {sowingDate && (
+                    <p className="text-xs text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      {sowingDD}/{sowingMM}/{sowingYYYY}
+                    </p>
+                  )}
                 </div>
 
                 {/* Land Area */}
