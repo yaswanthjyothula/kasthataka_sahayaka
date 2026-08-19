@@ -892,7 +892,7 @@ Your job:
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
+    <div className="dashboard-root min-h-screen bg-white text-slate-900 flex flex-col font-sans">
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-emerald-100 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
