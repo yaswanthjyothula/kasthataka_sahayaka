@@ -44,7 +44,7 @@ export async function aiTranslate(
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'http://localhost:3000',
-      'X-Title': 'Kasthataka Sahayaka',
+      'X-Title': 'KisanMitra',
     },
     body: JSON.stringify({
       model: 'google/gemma-4-26b-a4b-it:free',
@@ -55,7 +55,7 @@ export async function aiTranslate(
 Translate UI text into ${targetLangName} (code: ${targetLang}).
 Rules:
 - Return ONLY valid JSON with the same keys as input. No markdown, no explanation.
-- Keep proper nouns unchanged: Kasthataka Sahayaka, CIBRC, GPS, AI, Leaf Blast, Tricyclazole.
+- Keep proper nouns unchanged: KisanMitra, CIBRC, GPS, AI, Leaf Blast, Tricyclazole.
 - Keep badge labels short and concise.
 - Tone: practical, farmer-friendly.`,
         },

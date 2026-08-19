@@ -1177,6 +1177,7 @@ export default function Dashboard() {
                       }`}>
                         {msg.image && (
                           <div className="mb-2.5 rounded-xl overflow-hidden border border-emerald-200 max-w-xs">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={msg.image} alt="Uploaded leaf" className="w-full h-auto object-cover max-h-48" />
                           </div>
                         )}
@@ -1218,6 +1219,7 @@ export default function Dashboard() {
                 {selectedImage && (
                   <div className="mb-2 p-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between max-w-xs">
                     <div className="flex items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={selectedImage} alt="Preview" className="w-8 h-8 rounded-lg object-cover" />
                       <span className="text-xs text-emerald-900 font-medium">Leaf Photo Attached</span>
                     </div>
