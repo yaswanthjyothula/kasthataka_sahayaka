@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -9,7 +9,6 @@ import {
   CloudSun,
   TrendingUp,
   PackageCheck,
-  Headphones,
   ClipboardList,
   Menu,
   X,
@@ -37,22 +36,163 @@ interface ChatMessage {
   image?: string;
 }
 
+// Consistent time formatter — avoids server/client locale mismatch (hydration error)
+function getTime(): string {
+  const d = new Date();
+  const h = d.getHours().toString().padStart(2, '0');
+  const m = d.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<string>('detection');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
-  // Chatbot states
+  // Chatbot states — initial timestamp set client-side only to avoid hydration mismatch
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       sender: 'bot',
       text: 'Namaste! I am your KisanMitra AI Advisor. Tap the Camera button to open the live leaf camera viewfinder, upload an image, or use the Mic to ask questions about crop disease symptoms and treatment.',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: '—',
     },
   ]);
   const [inputText, setInputText] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
+
+  // ─── Weather state ─────────────────────────────────────────────────────────
+  const OWM_KEY = 'fbcb5222fdf88744e6ba4f9dd53d41b5';
+  type WxStatus = 'idle' | 'locating' | 'loading' | 'ok' | 'error';
+  const [wxStatus, setWxStatus]   = useState<WxStatus>('idle');
+  const [wxError, setWxError]     = useState('');
+  const [wxCoords, setWxCoords]   = useState<{ lat: number; lon: number } | null>(null);
+  const [wxTz, setWxTz]           = useState(0);
+  const [wxSearchQuery, setWxSearchQuery] = useState('');
+  const [wxSearching, setWxSearching]     = useState(false);
+  const [wxLocationLabel, setWxLocationLabel] = useState('');
+  const [wxCurrent, setWxCurrent] = useState<{
+    city: string; country: string; temp: number; feelsLike: number;
+    humidity: number; pressure: number; windSpeed: number; windDeg: number;
+    visibility: number; description: string; icon: string;
+    clouds: number; rain1h: number; sunrise: number; sunset: number;
+  } | null>(null);
+  const [wxForecast, setWxForecast] = useState<{
+    dt: number; temp: number; humidity: number; pop: number;
+    description: string; icon: string; clouds: number;
+  }[]>([]);
+
+  const wxFetchWeather = async (lat: number, lon: number) => {
+    setWxStatus('loading');
+    try {
+      const [cr, fr] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OWM_KEY}&units=metric`),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OWM_KEY}&units=metric&cnt=24`),
+      ]);
+      if (!cr.ok || !fr.ok) throw new Error('Weather API error');
+      const cur = await cr.json() as {
+        name: string; sys: { country: string; sunrise: number; sunset: number };
+        main: { temp: number; feels_like: number; humidity: number; pressure: number };
+        wind: { speed: number; deg?: number };
+        visibility?: number; weather: { description: string; icon: string }[];
+        clouds: { all: number }; rain?: { '1h'?: number }; timezone?: number;
+      };
+      const fct = await fr.json() as { list: { dt: number; main: { temp: number; humidity: number }; pop: number; weather: { description: string; icon: string }[]; clouds: { all: number } }[] };
+      const tz = cur.timezone ?? 0;
+      setWxTz(tz);
+      setWxCurrent({
+        city: cur.name, country: cur.sys.country,
+        temp: Math.round(cur.main.temp), feelsLike: Math.round(cur.main.feels_like),
+        humidity: cur.main.humidity, pressure: cur.main.pressure,
+        windSpeed: cur.wind.speed, windDeg: cur.wind.deg ?? 0,
+        visibility: Math.round((cur.visibility ?? 10000) / 1000),
+        description: cur.weather[0].description, icon: cur.weather[0].icon,
+        clouds: cur.clouds.all, rain1h: cur.rain?.['1h'] ?? 0,
+        sunrise: cur.sys.sunrise, sunset: cur.sys.sunset,
+      });
+      setWxForecast(fct.list.map(s => ({
+        dt: s.dt, temp: Math.round(s.main.temp), humidity: s.main.humidity,
+        pop: s.pop, description: s.weather[0].description, icon: s.weather[0].icon, clouds: s.clouds.all,
+      })));
+      setWxStatus('ok');
+    } catch (e: unknown) {
+      setWxError(e instanceof Error ? e.message : 'Failed to load weather');
+      setWxStatus('error');
+    }
+  };
+
+  const wxAcquireLocation = () => {
+    setWxStatus('locating'); setWxError(''); setWxLocationLabel('');
+    if (!navigator.geolocation) { setWxError('Geolocation not supported.'); setWxStatus('error'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        localStorage.setItem('ks_wx_lat', String(lat));
+        localStorage.setItem('ks_wx_lon', String(lon));
+        setWxCoords({ lat, lon });
+        wxFetchWeather(lat, lon);
+      },
+      err => {
+        setWxError(err.code === 1 ? 'Location permission denied. Allow access and try again.' : 'Unable to get location. Please try again.');
+        setWxStatus('error');
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
+  // Search weather by city/location name
+  const wxSearchLocation = async (query: string) => {
+    const q = query.trim();
+    if (!q) return;
+    setWxSearching(true);
+    setWxError('');
+    try {
+      // Geocode the location name to lat/lon using OWM geocoding API
+      const geoRes = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${OWM_KEY}`
+      );
+      if (!geoRes.ok) throw new Error('Geocoding failed');
+      const geoData = await geoRes.json() as { lat: number; lon: number; name: string; country: string; state?: string }[];
+      if (!geoData || geoData.length === 0) throw new Error(`No results found for "${q}". Try a city name like "Bengaluru" or "Hyderabad".`);
+      const { lat, lon, name, country, state } = geoData[0];
+      setWxCoords({ lat, lon });
+      setWxLocationLabel(`${name}${state ? ', ' + state : ''}, ${country}`);
+      await wxFetchWeather(lat, lon);
+    } catch (e: unknown) {
+      setWxError(e instanceof Error ? e.message : 'Location search failed');
+      setWxStatus('error');
+    } finally {
+      setWxSearching(false);
+    }
+  };
+
+  // Auto-load weather on mount if permission already granted
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const tryAuto = () => {
+      const lat = localStorage.getItem('ks_wx_lat');
+      const lon = localStorage.getItem('ks_wx_lon');
+      if (lat && lon) {
+        const la = parseFloat(lat), lo = parseFloat(lon);
+        setWxCoords({ lat: la, lon: lo });
+        wxFetchWeather(la, lo);
+        navigator.geolocation.getCurrentPosition(
+          p => { localStorage.setItem('ks_wx_lat', String(p.coords.latitude)); localStorage.setItem('ks_wx_lon', String(p.coords.longitude)); wxFetchWeather(p.coords.latitude, p.coords.longitude); },
+          () => {}, { timeout: 10000, maximumAge: 300000 }
+        );
+        return;
+      }
+      wxAcquireLocation();
+    };
+    if ('permissions' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' }).then(r => {
+        if (r.state === 'granted') tryAuto();
+        else if (r.state === 'prompt' && localStorage.getItem('ks_wx_lat')) tryAuto();
+      });
+    } else if (localStorage.getItem('ks_wx_lat')) tryAuto();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Camera Viewfinder Modal states
   const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
@@ -484,71 +624,66 @@ export default function Dashboard() {
   };
 
   // Returns crop-specific CIBRC-approved product cards
-  const getCropProducts = (ct: string): Array<{ badge: string; name: string; desc: string; dosage: string; type: 'bio' | 'systemic' | 'contact' }> => {
+  const getCropProducts = (ct: string): Array<{ badge: string; name: string; desc: string; dosage: string; type: 'bio' | 'systemic' | 'contact'; price: string; buyUrl: string; brand: string }> => {
     const map: Record<string, ReturnType<typeof getCropProducts>> = {
       finger_millet: [
-        { badge: 'Bio-Control', name: 'Pseudomonas fluorescens 1.15% WP', desc: 'Seed treatment & foliar spray against Blast pathogens. Promotes plant immunity.', dosage: '10 g / kg seed or 2.5 kg / ha foliar', type: 'bio' },
-        { badge: 'Systemic Fungicide', name: 'Tricyclazole 75% WP', desc: 'Systemic protection against Leaf Blast, Neck Blast, and Finger Blast.', dosage: '18 g / 15 L knapsack pump', type: 'systemic' },
-        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', desc: 'Broad-spectrum protectant for early-stage disease management.', dosage: '25 g / 15 L water', type: 'contact' },
+        { badge: 'Bio-Control', name: 'Pseudomonas fluorescens 1.15% WP', brand: 'Biofit / Multiplex', desc: 'Seed treatment & foliar spray against Blast pathogens. Promotes plant immunity.', dosage: '10 g / kg seed or 2.5 kg / ha foliar', type: 'bio', price: '₹320 / kg', buyUrl: 'https://www.bigbasket.com/ps/?q=pseudomonas+fluorescens' },
+        { badge: 'Systemic Fungicide', name: 'Tricyclazole 75% WP', brand: 'Bayer / Dhanuka', desc: 'Systemic protection against Leaf Blast, Neck Blast, and Finger Blast in ragi.', dosage: '18 g / 15 L knapsack pump', type: 'systemic', price: '₹480 / 100 g', buyUrl: 'https://www.amazon.in/s?k=tricyclazole+75+wp+fungicide' },
+        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', brand: 'Indofil / UPL', desc: 'Broad-spectrum protectant for early-stage disease management in finger millet.', dosage: '25 g / 15 L water', type: 'contact', price: '₹210 / 500 g', buyUrl: 'https://www.amazon.in/s?k=mancozeb+75+wp' },
       ],
       rice: [
-        { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', desc: 'Soil and seed treatment against sheath blight and bakanae disease.', dosage: '4 g / kg seed', type: 'bio' },
-        { badge: 'Systemic Fungicide', name: 'Carbendazim 50% WP', desc: 'Controls sheath blight, brown spot, and neck rot in rice.', dosage: '20 g / 15 L water', type: 'systemic' },
-        { badge: 'Contact Fungicide', name: 'Copper Oxychloride 50% WP', desc: 'Protects against bacterial leaf blight and leaf scald.', dosage: '30 g / 15 L water', type: 'contact' },
+        { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', brand: 'T-Stanes / Agri Gold', desc: 'Soil and seed treatment against sheath blight and bakanae disease.', dosage: '4 g / kg seed', type: 'bio', price: '₹280 / kg', buyUrl: 'https://www.amazon.in/s?k=trichoderma+viride+wp' },
+        { badge: 'Systemic Fungicide', name: 'Carbendazim 50% WP', brand: 'BASF / Dhanuka', desc: 'Controls sheath blight, brown spot, and neck rot in rice.', dosage: '20 g / 15 L water', type: 'systemic', price: '₹190 / 250 g', buyUrl: 'https://www.amazon.in/s?k=carbendazim+50+wp' },
+        { badge: 'Contact Fungicide', name: 'Copper Oxychloride 50% WP', brand: 'Coromandel / Multiplex', desc: 'Protects against bacterial leaf blight and leaf scald in rice.', dosage: '30 g / 15 L water', type: 'contact', price: '₹160 / 500 g', buyUrl: 'https://www.amazon.in/s?k=copper+oxychloride+50+wp' },
       ],
       wheat: [
-        { badge: 'Bio-Control', name: 'Trichoderma harzianum 2% WP', desc: 'Seed treatment for Karnal bunt and foot rot suppression.', dosage: '4 g / kg seed', type: 'bio' },
-        { badge: 'Systemic Fungicide', name: 'Propiconazole 25% EC', desc: 'Highly effective against yellow rust, brown rust and powdery mildew.', dosage: '10 ml / 15 L water', type: 'systemic' },
-        { badge: 'Systemic Fungicide', name: 'Tebuconazole 25.9% EC', desc: 'Controls head scab (Fusarium) and loose smut at grain fill.', dosage: '8 ml / 15 L water', type: 'systemic' },
+        { badge: 'Bio-Control', name: 'Trichoderma harzianum 2% WP', brand: 'Biofit / Kan Biosys', desc: 'Seed treatment for Karnal bunt and foot rot suppression.', dosage: '4 g / kg seed', type: 'bio', price: '₹300 / kg', buyUrl: 'https://www.amazon.in/s?k=trichoderma+harzianum' },
+        { badge: 'Systemic Fungicide', name: 'Propiconazole 25% EC', brand: 'Syngenta Tilt / Dow', desc: 'Highly effective against yellow rust, brown rust and powdery mildew in wheat.', dosage: '10 ml / 15 L water', type: 'systemic', price: '₹540 / 250 ml', buyUrl: 'https://www.amazon.in/s?k=propiconazole+25+ec+tilt' },
+        { badge: 'Systemic Fungicide', name: 'Tebuconazole 25.9% EC', brand: 'Bayer Folicur / Indofil', desc: 'Controls head scab (Fusarium) and loose smut at grain fill stage.', dosage: '8 ml / 15 L water', type: 'systemic', price: '₹620 / 250 ml', buyUrl: 'https://www.amazon.in/s?k=tebuconazole+fungicide' },
       ],
       maize: [
-        { badge: 'Bio-Control', name: 'Pseudomonas fluorescens 1% WP', desc: 'Suppresses downy mildew and stalk rot pathogens in soil.', dosage: '10 g / kg seed', type: 'bio' },
-        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', desc: 'Broad-spectrum contact fungicide for Northern Leaf Blight control.', dosage: '25 g / 15 L water', type: 'contact' },
-        { badge: 'Systemic Fungicide', name: 'Metalaxyl 8% + Mancozeb 64% WP', desc: 'Seed and foliar treatment for downy mildew.', dosage: '25 g / 15 L water', type: 'systemic' },
-      ],
-      cotton: [
-        { badge: 'Bio-Control', name: 'Bacillus thuringiensis (Bt) 1.5% WP', desc: 'Biological control of bollworm larvae; safe for beneficial insects.', dosage: '2.5 kg / ha', type: 'bio' },
-        { badge: 'Systemic Insecticide', name: 'Spiromesifen 22.9% SC', desc: 'Controls whitefly and mites; residue-safe for cotton export standards.', dosage: '10 ml / 15 L water', type: 'systemic' },
-        { badge: 'Contact Fungicide', name: 'Copper Oxychloride 50% WP', desc: 'Manages boll rot and grey mildew under high humidity.', dosage: '30 g / 15 L water', type: 'contact' },
-      ],
-      sugarcane: [
-        { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', desc: 'Sett treatment for red rot and wilt disease suppression.', dosage: '4 g / L water (sett dip)', type: 'bio' },
-        { badge: 'Systemic Fungicide', name: 'Propiconazole 25% EC', desc: 'Systemic control of red rot (Colletotrichum falcatum) at tillering stage.', dosage: '10 ml / 15 L water', type: 'systemic' },
-        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', desc: 'Controls pokkah boeng and brown stripe diseases.', dosage: '25 g / 15 L water', type: 'contact' },
+        { badge: 'Bio-Control', name: 'Pseudomonas fluorescens 1% WP', brand: 'Biofit / T-Stanes', desc: 'Suppresses downy mildew and stalk rot pathogens in soil.', dosage: '10 g / kg seed', type: 'bio', price: '₹320 / kg', buyUrl: 'https://www.amazon.in/s?k=pseudomonas+fluorescens' },
+        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', brand: 'Indofil M-45', desc: 'Preventive spray for Northern Leaf Blight and Turcicum blight.', dosage: '25 g / 15 L water', type: 'contact', price: '₹210 / 500 g', buyUrl: 'https://www.amazon.in/s?k=mancozeb+75+wp+indofil' },
+        { badge: 'Systemic Fungicide', name: 'Metalaxyl 8% + Mancozeb 64%', brand: 'Ridomil Gold / Syngenta', desc: 'Controls downy mildew and collar rot in maize seedlings.', dosage: '25 g / 15 L water', type: 'systemic', price: '₹780 / 500 g', buyUrl: 'https://www.amazon.in/s?k=ridomil+gold+metalaxyl+mancozeb' },
       ],
       tomato: [
-        { badge: 'Bio-Control', name: 'Bacillus subtilis 1.34% SC', desc: 'Suppresses early blight and Botrytis in wet conditions.', dosage: '3 ml / L water', type: 'bio' },
-        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP + Cymoxanil 8% WP', desc: 'Broad-spectrum contact + translaminar for early and late blight.', dosage: '25 g + 2 g / 15 L water', type: 'contact' },
-        { badge: 'Systemic Fungicide', name: 'Metalaxyl-M 4% + Mancozeb 64% WP', desc: 'Systemic late blight (Phytophthora infestans) management.', dosage: '25 g / 15 L water', type: 'systemic' },
+        { badge: 'Bio-Control', name: 'Bacillus subtilis 1.34% WP', brand: 'Serenade / Bayer', desc: 'Broad spectrum bio-fungicide against early blight and damping off.', dosage: '2.5 kg / ha', type: 'bio', price: '₹850 / 500 g', buyUrl: 'https://www.amazon.in/s?k=bacillus+subtilis+fungicide' },
+        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP + Cymoxanil', brand: 'Curzate / DuPont', desc: 'Emergency spray against late blight (Phytophthora) in tomato.', dosage: '25 g / 15 L water', type: 'contact', price: '₹490 / 200 g', buyUrl: 'https://www.amazon.in/s?k=cymoxanil+mancozeb+curzate' },
+        { badge: 'Systemic Fungicide', name: 'Fenamidone 10% + Mancozeb 50% WG', brand: 'Sectin / Bayer', desc: 'Systemic + contact action against blight and downy mildew.', dosage: '20 g / 15 L water', type: 'systemic', price: '₹720 / 250 g', buyUrl: 'https://www.amazon.in/s?k=fenamidone+mancozeb+sectin' },
       ],
       potato: [
-        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', desc: 'Preventive spray for late blight; apply on 7-day schedule in blight season.', dosage: '25 g / 15 L water', type: 'contact' },
-        { badge: 'Systemic Fungicide', name: 'Cymoxanil 8% + Mancozeb 64% WP', desc: 'Curative and preventive action against Phytophthora late blight.', dosage: '30 g / 15 L water', type: 'systemic' },
-        { badge: 'Bio-Control', name: 'Trichoderma harzianum 2% WP', desc: 'Soil drench at planting for Fusarium wilt and black scurf suppression.', dosage: '5 g / L water (drench)', type: 'bio' },
+        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', brand: 'Indofil M-45', desc: 'Preventive spray every 7 days during blight season for potato.', dosage: '25 g / 15 L water', type: 'contact', price: '₹210 / 500 g', buyUrl: 'https://www.amazon.in/s?k=mancozeb+75+wp' },
+        { badge: 'Systemic Fungicide', name: 'Cymoxanil 8% + Mancozeb 64%', brand: 'Curzate / DuPont', desc: 'Fast-acting against late blight even after infection has begun.', dosage: '30 g / 15 L water', type: 'systemic', price: '₹510 / 250 g', buyUrl: 'https://www.amazon.in/s?k=cymoxanil+mancozeb' },
+        { badge: 'Systemic Fungicide', name: 'Propamocarb 72.2% SL', brand: 'Previcur / Bayer', desc: 'Systemic action against Phytophthora and downy mildew at all stages.', dosage: '15 ml / 15 L water', type: 'systemic', price: '₹890 / 500 ml', buyUrl: 'https://www.amazon.in/s?k=propamocarb+previcur' },
       ],
-      groundnut: [
-        { badge: 'Bio-Control', name: 'Rhizobium inoculant (BNF)', desc: 'Seed inoculation for nitrogen fixation; improves pod yield by 15–20%.', dosage: '600 g / 30 kg seed', type: 'bio' },
-        { badge: 'Contact Fungicide', name: 'Chlorothalonil 75% WP', desc: 'Controls early and late leaf spot; apply from 30 DAS every 10 days.', dosage: '20 g / 15 L water', type: 'contact' },
-        { badge: 'Systemic Fungicide', name: 'Carbendazim 50% WP', desc: 'Collar rot and stem rot (Sclerotium rolfsii) management.', dosage: '20 g / 15 L water', type: 'systemic' },
-      ],
-      mustard: [
-        { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', desc: 'Seed treatment against Sclerotinia stem rot and damping-off.', dosage: '4 g / kg seed', type: 'bio' },
-        { badge: 'Systemic Fungicide', name: 'Iprodione 50% WP', desc: 'Controls Alternaria blight and white rust on leaves and pods.', dosage: '20 g / 15 L water', type: 'systemic' },
-        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', desc: 'Broad-spectrum protection against Alternaria and downy mildew.', dosage: '25 g / 15 L water', type: 'contact' },
+      cotton: [
+        { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', brand: 'T-Stanes', desc: 'Soil application for root rot and damping off in cotton.', dosage: '5 g / kg seed', type: 'bio', price: '₹280 / kg', buyUrl: 'https://www.amazon.in/s?k=trichoderma+viride' },
+        { badge: 'Contact Fungicide', name: 'Copper Oxychloride 50% WP', brand: 'Blitox / Tata Rallis', desc: 'Protects against grey mildew, bacterial blight and leaf curl complex.', dosage: '30 g / 15 L water', type: 'contact', price: '₹160 / 500 g', buyUrl: 'https://www.amazon.in/s?k=copper+oxychloride+blitox' },
+        { badge: 'Systemic Fungicide', name: 'Hexaconazole 5% EC', brand: 'Contaf Plus / Bayer', desc: 'Controls Alternaria leaf spot and Fusarium wilt in cotton.', dosage: '15 ml / 15 L water', type: 'systemic', price: '₹420 / 500 ml', buyUrl: 'https://www.amazon.in/s?k=hexaconazole+5+ec+contaf' },
       ],
       chilli: [
-        { badge: 'Bio-Control', name: 'Bacillus subtilis 1.34% SC', desc: 'Suppresses anthracnose and fruit rot pathogens during wet spells.', dosage: '3 ml / L water', type: 'bio' },
-        { badge: 'Contact Fungicide', name: 'Copper Oxychloride 50% WP', desc: 'Manages anthracnose, die-back and fruit rot caused by Colletotrichum.', dosage: '30 g / 15 L water', type: 'contact' },
-        { badge: 'Systemic Fungicide', name: 'Carbendazim 50% WP', desc: 'Systemic control of powdery mildew and Fusarium wilt.', dosage: '20 g / 15 L water', type: 'systemic' },
+        { badge: 'Bio-Control', name: 'Pseudomonas fluorescens 1% WP', brand: 'Multiplex / Agri Gold', desc: 'Suppresses Phytophthora root rot and damping off in chilli.', dosage: '10 g / kg seed', type: 'bio', price: '₹320 / kg', buyUrl: 'https://www.amazon.in/s?k=pseudomonas+fluorescens+bio' },
+        { badge: 'Contact Fungicide', name: 'Copper Oxychloride 50% WP', brand: 'Blitox / Coromandel', desc: 'Protects against anthracnose and fruit rot post-rain in chilli.', dosage: '30 g / 15 L water', type: 'contact', price: '₹165 / 500 g', buyUrl: 'https://www.amazon.in/s?k=copper+oxychloride+50wp' },
+        { badge: 'Systemic Fungicide', name: 'Difenoconazole 25% EC', brand: 'Score / Syngenta', desc: 'Systemic control of anthracnose, powdery mildew and leaf spot.', dosage: '8 ml / 15 L water', type: 'systemic', price: '₹680 / 250 ml', buyUrl: 'https://www.amazon.in/s?k=difenoconazole+score+syngenta' },
+      ],
+      groundnut: [
+        { badge: 'Bio-Control', name: 'Trichoderma harzianum 2% WP', brand: 'Kan Biosys / Biofit', desc: 'Seed treatment against collar rot and stem rot in groundnut.', dosage: '4 g / kg seed', type: 'bio', price: '₹300 / kg', buyUrl: 'https://www.amazon.in/s?k=trichoderma+harzianum+seed+treatment' },
+        { badge: 'Contact Fungicide', name: 'Chlorothalonil 75% WP', brand: 'Kavach / Syngenta', desc: 'Controls early and late leaf spot in groundnut effectively.', dosage: '20 g / 15 L water', type: 'contact', price: '₹340 / 500 g', buyUrl: 'https://www.amazon.in/s?k=chlorothalonil+75+wp+kavach' },
+        { badge: 'Systemic Fungicide', name: 'Tebuconazole 25.9% EC', brand: 'Folicur / Bayer', desc: 'Systemic control of rust, collar rot and pod rot in groundnut.', dosage: '8 ml / 15 L water', type: 'systemic', price: '₹620 / 250 ml', buyUrl: 'https://www.amazon.in/s?k=tebuconazole+folicur+bayer' },
+      ],
+      mustard: [
+        { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', brand: 'T-Stanes', desc: 'Seed and soil treatment against Sclerotinia stem rot.', dosage: '4 g / kg seed', type: 'bio', price: '₹280 / kg', buyUrl: 'https://www.amazon.in/s?k=trichoderma+viride' },
+        { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', brand: 'Indofil M-45', desc: 'Controls Alternaria blight and white rust in mustard.', dosage: '25 g / 15 L water', type: 'contact', price: '₹210 / 500 g', buyUrl: 'https://www.amazon.in/s?k=mancozeb+75+wp' },
+        { badge: 'Systemic Fungicide', name: 'Iprodione 50% WP', brand: 'Rovral / Bayer', desc: 'Specific action against Sclerotinia stem rot and Alternaria.', dosage: '20 g / 15 L water', type: 'systemic', price: '₹580 / 250 g', buyUrl: 'https://www.amazon.in/s?k=iprodione+rovral' },
       ],
     };
+    // Default fallback products
     return map[ct] ?? [
-      { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', desc: 'General soil and seed treatment against fungal pathogens. Promotes root health.', dosage: '4 g / kg seed or 2.5 kg / ha soil drench', type: 'bio' },
-      { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', desc: 'Broad-spectrum contact protectant for most fungal leaf diseases.', dosage: '25 g / 15 L water', type: 'contact' },
-      { badge: 'Systemic Fungicide', name: 'Carbendazim 50% WP', desc: 'Systemic fungicide for wilt, rot and leaf-spot management.', dosage: '20 g / 15 L water', type: 'systemic' },
+      { badge: 'Bio-Control', name: 'Trichoderma viride 1% WP', brand: 'T-Stanes / Agri Gold', desc: 'Universal bio-fungicide for soil-borne disease suppression.', dosage: '4 g / kg seed', type: 'bio', price: '₹280 / kg', buyUrl: 'https://www.amazon.in/s?k=trichoderma+viride+wp' },
+      { badge: 'Contact Fungicide', name: 'Mancozeb 75% WP', brand: 'Indofil M-45', desc: 'Broad-spectrum protectant fungicide for all major foliar diseases.', dosage: '25 g / 15 L water', type: 'contact', price: '₹210 / 500 g', buyUrl: 'https://www.amazon.in/s?k=mancozeb+75+wp' },
+      { badge: 'Systemic Fungicide', name: 'Carbendazim 50% WP', brand: 'BASF / Dhanuka', desc: 'Systemic fungicide for wilt and foliar diseases across crops.', dosage: '20 g / 15 L water', type: 'systemic', price: '₹190 / 250 g', buyUrl: 'https://www.amazon.in/s?k=carbendazim+50+wp' },
     ];
   };
-
   const menuItems = [
     { id: 'cropdetails', label: 'Share Crop & Land Details', icon: ClipboardList, badge: 'Setup' },
     { id: 'detection', label: 'Crop Disease Detection', icon: Camera, badge: 'Phase 2' },
@@ -557,7 +692,6 @@ export default function Dashboard() {
     { id: 'weather', label: 'Weather Forecasting', icon: CloudSun, badge: '72h Risk' },
     { id: 'analytics', label: 'Predictive Yield Analytics', icon: TrendingUp, badge: 'Yield AI' },
     { id: 'products', label: 'Disease Based Products', icon: PackageCheck, badge: 'CIBRC Safe' },
-    { id: 'support', label: 'Local Farmer Support', icon: Headphones, badge: '7 Lang Voice' },
   ];
 
   const quickPrompts = [
@@ -566,6 +700,12 @@ export default function Dashboard() {
     'Check 72-hour humidity & weather risk for Neck Blast',
     'Symptoms of Foot Rot and Brown Spot in early growth',
   ];
+
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === '1' ? { ...msg, time: getTime() } : msg))
+    );
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -619,7 +759,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputText;
     if (!text.trim() && !selectedImage) return;
 
@@ -628,37 +768,77 @@ export default function Dashboard() {
       sender: 'user',
       text: text.trim(),
       image: selectedImage || undefined,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: getTime(),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInputText('');
     setSelectedImage(null);
+    setIsBotTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      let botResponse = 'Thank you for your query. ';
-      const queryLower = text.toLowerCase();
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || '';
+      const ctx = savedCropContext;
+      const cropInfo = ctx
+        ? `Farmer's crop: ${ctx.cropTypeLabel}${ctx.growthStage ? `, at ${ctx.growthStage} stage` : ''}${ctx.landAcres ? `, ${ctx.landAcres} acres` : ''}${ctx.location ? `, located in ${ctx.location}` : ''}.`
+        : 'Crop: Finger Millet (Ragi) — general advisory.';
 
-      if (queryLower.includes('blast') || queryLower.includes('leaf')) {
-        botResponse += 'Leaf Blast in Finger Millet presents spindle-shaped necrotic lesions with grey centers. Recommended treatment: Foliar spray of Tricyclazole 75% WP @ 0.6g/L or Pseudomonas fluorescens bio-fungicide @ 10g/L.';
-      } else if (queryLower.includes('dosage') || queryLower.includes('cibrc') || queryLower.includes('tank')) {
-        botResponse += 'Per CIBRC safety guidelines, apply 18g of Tricyclazole 75% WP per 15-liter knapsack pump. Ensure complete canopy coverage with a 200L/acre water volume.';
-      } else if (queryLower.includes('weather') || queryLower.includes('humidity') || queryLower.includes('risk')) {
-        botResponse += 'Current 72-hour forecast indicates 88% Relative Humidity and 11.5 hours of leaf wetness. Spore germination vulnerability is HIGH. Immediate preventive spray recommended.';
-      } else {
-        botResponse += 'I have recorded your crop parameters. Our diagnostic engine suggests monitoring tillering stage leaf tips. Would you like to check the CIBRC pesticide safety rules or compute your knapsack tank-mix?';
+      const systemPrompt = `You are KisanMitra, an expert AI crop disease advisor for Indian farmers specialising in finger millet (ragi) and other Indian crops.
+${cropInfo}
+Your job:
+1. DETECT diseases from described or photographed symptoms — give a confident diagnosis with the disease name, causative organism, and severity.
+2. RECOMMEND specific CIBRC-approved products with exact dosages (Tricyclazole 75% WP, Pseudomonas fluorescens, Mancozeb 75% WP, Carbendazim 50% WP, etc.).
+3. SUGGEST when and how to spray (timing, water volume, knapsack pump calculations).
+4. WARN about weather-based risk (high humidity >85%, leaf wetness >10 hrs = spray immediately).
+5. Keep responses concise, practical, and farmer-friendly. Use bullet points for recommendations.
+6. Always mention 1–2 specific product names and dosages in every disease-related answer.`;
+
+      const userContent = selectedImage
+        ? `${text.trim()}\n\n[Farmer has attached a leaf photo for disease diagnosis. Analyse symptoms described and suggest treatment.]`
+        : text.trim();
+
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:3000',
+          'X-Title': 'KisanMitra',
+        },
+        body: JSON.stringify({
+          model: 'google/gemma-4-26b-a4b-it:free',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({})) as { error?: { message?: string } };
+        throw new Error(errData?.error?.message || `HTTP ${res.status}`);
       }
 
-      const botMsg: ChatMessage = {
+      const data = await res.json() as { choices?: { message?: { content?: string } }[] };
+      const botResponse = data.choices?.[0]?.message?.content || 'No response received.';
+
+      setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
         text: botResponse,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setMessages((prev) => [...prev, botMsg]);
-    }, 700);
+        time: getTime(),
+      }]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setMessages((prev) => [...prev, {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: `Sorry, I couldn't reach the AI service. Please try again. (${msg})`,
+        time: getTime(),
+      }]);
+    } finally {
+      setIsBotTyping(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1253,6 +1433,18 @@ export default function Dashboard() {
                       )}
                     </div>
                   ))}
+                  {isBotTyping && (
+                    <div className="flex gap-3 justify-start">
+                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                        <Bot className="w-4 h-4" />
+                      </div>
+                      <div className="bg-emerald-50/80 border border-emerald-100 text-slate-800 rounded-2xl rounded-bl-none p-4 flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0ms]" />
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:150ms]" />
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:300ms]" />
+                      </div>
+                    </div>
+                  )}
                   <div ref={chatEndRef} />
                 </div>
 
@@ -1356,7 +1548,7 @@ export default function Dashboard() {
                   {/* Send Button */}
                   <button
                     onClick={() => handleSendMessage()}
-                    disabled={!inputText.trim() && !selectedImage}
+                    disabled={(!inputText.trim() && !selectedImage) || isBotTyping}
                     className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold p-3 rounded-xl shadow-md shadow-emerald-600/20 transition-transform hover:scale-105 flex items-center justify-center"
                   >
                     <Send className="w-4 h-4" />
@@ -1699,93 +1891,255 @@ export default function Dashboard() {
           {/* TAB 5: Weather Forecasting */}
           {activeTab === 'weather' && (() => {
             const ctx = savedCropContext;
-            const risk = getCropWeatherRisk(ctx?.cropType ?? '');
-            // Mock sensor values — in production these come from the weather API
-            const humidity = 88;
-            const wetness = 11.5;
-            const temperature = 26.4;
-            const humidityHigh = humidity >= risk.humidityThreshold;
-            const wetnessHigh  = wetness  >= risk.wetnessTrigger;
-            const tempInRange  = temperature >= risk.tempRangeMin && temperature <= risk.tempRangeMax;
-            const overallRisk  = (humidityHigh ? 1 : 0) + (wetnessHigh ? 1 : 0) + (tempInRange ? 1 : 0);
-            const riskLevel    = overallRisk === 3 ? 'Critical' : overallRisk === 2 ? 'High' : overallRisk === 1 ? 'Moderate' : 'Low';
-            const riskColor    = overallRisk === 3 ? 'bg-red-100 text-red-800' : overallRisk === 2 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800';
+            const cropRisk = getCropWeatherRisk(ctx?.cropType ?? '');
+
+            // Helper functions
+            const windDir = (deg: number) => ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg / 45) % 8];
+            const fmtTime = (unix: number, tz: number) => {
+              const d = new Date((unix + tz) * 1000);
+              return `${d.getUTCHours().toString().padStart(2,'0')}:${d.getUTCMinutes().toString().padStart(2,'0')}`;
+            };
+            const blastRisk = (humidity: number, temp: number, pop: number) => {
+              const score = (humidity >= cropRisk.humidityThreshold ? 3 : humidity >= 70 ? 2 : 1)
+                + (temp >= cropRisk.tempRangeMin && temp <= cropRisk.tempRangeMax ? 2 : 1)
+                + (pop >= 0.6 ? 2 : pop >= 0.3 ? 1 : 0);
+              if (score >= 6) return { label: 'CRITICAL', color: 'text-red-700', bg: 'bg-red-100 border-red-300' };
+              if (score >= 4) return { label: 'HIGH', color: 'text-amber-700', bg: 'bg-amber-100 border-amber-300' };
+              if (score >= 3) return { label: 'MODERATE', color: 'text-yellow-700', bg: 'bg-yellow-100 border-yellow-300' };
+              return { label: 'LOW', color: 'text-emerald-700', bg: 'bg-emerald-100 border-emerald-300' };
+            };
+
+            // Build 5-day daily forecast
+            const daily: typeof wxForecast = [];
+            const seen = new Set<string>();
+            for (const s of wxForecast) {
+              const d = new Date((s.dt + wxTz) * 1000);
+              const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+              const h = d.getUTCHours();
+              if (!seen.has(key) && h >= 10 && h <= 15) { seen.add(key); daily.push(s); }
+            }
+            if (daily.length < 5) {
+              for (const s of wxForecast) {
+                if (daily.length >= 5) break;
+                const d = new Date((s.dt + wxTz) * 1000);
+                const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+                if (!seen.has(key)) { seen.add(key); daily.push(s); }
+              }
+            }
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+            const risk = wxCurrent ? blastRisk(wxCurrent.humidity, wxCurrent.temp, wxForecast[0]?.pop ?? 0) : null;
+
             return (
-              <div className="space-y-6">
+              <div className="space-y-5">
+                {/* Header */}
                 <div className="bg-gradient-to-r from-emerald-700 via-emerald-800 to-green-800 border border-emerald-600 text-white rounded-2xl p-6 shadow-md">
                   <div className="flex items-center gap-2 text-sky-200 text-xs font-bold uppercase tracking-wider mb-1">
-                    <CloudSun className="w-4 h-4" />
-                    <span>Tomorrow.io / OpenWeather Fusion</span>
+                    <CloudSun className="w-4 h-4" /><span>OpenWeatherMap — Live Location</span>
                   </div>
-                  <h2 className="text-2xl font-extrabold text-white tracking-tight">72-Hour Pathogen Proliferation Vulnerability</h2>
+                  <h2 className="text-2xl font-extrabold text-white tracking-tight">Real-Time Weather & Crop Disease Risk</h2>
                   <p className="text-xs text-emerald-100 mt-1 max-w-2xl leading-relaxed">
-                    {ctx
-                      ? `Disease risk assessment for ${ctx.cropTypeLabel}${ctx.location ? ` · ${ctx.location}` : ''}.`
-                      : 'Real-time relative humidity, leaf wetness hours, and temperature forecasting for spore germination risk.'}
+                    {ctx ? `Live weather data for ${ctx.cropTypeLabel}${ctx.location ? ` · ${ctx.location}` : ''} with ${cropRisk.primaryDisease} risk index.`
+                      : 'Live temperature, humidity, wind, rain probability and 5-day forecast with blast spore proliferation risk.'}
                   </p>
                 </div>
 
-                {!ctx && (
-                  <div className="bg-white border border-amber-200 rounded-2xl p-5 flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-700">Showing generic risk thresholds.</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Save crop details in Tab 01 for crop-specific disease risk assessment.</p>
+                {/* Search bar — always visible */}
+                <div className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-sm">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                      </svg>
+                      <input
+                        type="text"
+                        value={wxSearchQuery}
+                        onChange={e => setWxSearchQuery(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && wxSearchLocation(wxSearchQuery)}
+                        placeholder="Search city, district or village… e.g. Bengaluru, Warangal"
+                        className="w-full pl-9 pr-4 py-2.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-slate-900 placeholder-slate-400"
+                      />
                     </div>
-                    <button onClick={() => setActiveTab('cropdetails')} className="flex-shrink-0 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition-colors">Fill Details</button>
+                    <button
+                      onClick={() => wxSearchLocation(wxSearchQuery)}
+                      disabled={!wxSearchQuery.trim() || wxSearching}
+                      className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+                    >
+                      {wxSearching
+                        ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" /></svg>
+                      }
+                      {wxSearching ? 'Searching…' : 'Search'}
+                    </button>
+                    <button
+                      onClick={() => { setWxSearchQuery(''); wxAcquireLocation(); }}
+                      title="Use my current location"
+                      className="flex items-center gap-1.5 bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 text-xs font-semibold px-3 py-2.5 rounded-xl transition-colors border border-slate-200"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      My Location
+                    </button>
                   </div>
-                )}
+                  {wxLocationLabel && (
+                    <p className="text-[11px] text-emerald-700 font-medium mt-2 pl-1">📍 Showing weather for: <strong>{wxLocationLabel}</strong></p>
+                  )}
+                </div>
 
-                {/* Primary disease banner */}
-                {ctx && (
-                  <div className={`flex items-start gap-3 rounded-2xl px-5 py-4 border ${overallRisk >= 2 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
-                    <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${overallRisk >= 2 ? 'text-red-500' : 'text-emerald-600'}`} />
+                {/* IDLE — ask for location */}
+                {wxStatus === 'idle' && (
+                  <div className="bg-white border border-emerald-100 rounded-2xl p-10 flex flex-col items-center gap-5 shadow-sm text-center">
+                    <div className="w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
+                      <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                    </div>
                     <div>
-                      <p className={`text-xs font-bold ${overallRisk >= 2 ? 'text-red-800' : 'text-emerald-800'}`}>
-                        {riskLevel} Risk — {risk.primaryDisease}
-                      </p>
-                      <p className="text-xs text-slate-600 mt-0.5">{risk.riskNote}</p>
-                      {overallRisk >= 2 && (
-                        <p className="text-xs font-bold text-red-700 mt-1">⚠ Action: {risk.sprayAlert}</p>
-                      )}
+                      <h3 className="text-lg font-extrabold text-emerald-950">Enable Location for Accurate Forecast</h3>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed">We need your location to fetch real-time weather, humidity levels, and crop disease risk specific to your farm.</p>
                     </div>
+                    <button onClick={wxAcquireLocation} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-xl shadow-md transition-transform hover:scale-105 text-sm">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                      Turn On Location
+                    </button>
+                    <p className="text-[11px] text-slate-400">Your location is only used to fetch weather and is never stored.</p>
                   </div>
                 )}
 
-                {/* Weather metric cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="bg-white border border-emerald-100 p-5 rounded-2xl text-center space-y-2 shadow-sm">
-                    <span className="text-xs text-slate-500 font-medium">Relative Humidity</span>
-                    <div className="text-3xl font-extrabold text-sky-600">{humidity}%</div>
-                    <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold inline-block ${humidityHigh ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                      {humidityHigh ? `Above ${risk.humidityThreshold}% threshold` : `Below ${risk.humidityThreshold}% threshold`}
-                    </span>
+                {/* LOCATING */}
+                {wxStatus === 'locating' && (
+                  <div className="bg-white border border-emerald-100 rounded-2xl p-10 flex flex-col items-center gap-4 shadow-sm">
+                    <RefreshCw className="w-10 h-10 text-emerald-600 animate-spin" />
+                    <p className="text-sm font-semibold text-emerald-900">Detecting your location...</p>
+                    <p className="text-xs text-slate-400">Please allow location access when prompted by your browser.</p>
                   </div>
-                  <div className="bg-white border border-emerald-100 p-5 rounded-2xl text-center space-y-2 shadow-sm">
-                    <span className="text-xs text-slate-500 font-medium">Leaf Wetness Duration</span>
-                    <div className="text-3xl font-extrabold text-emerald-700">{wetness} hrs</div>
-                    <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold inline-block ${wetnessHigh ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                      {wetnessHigh ? `Exceeds ${risk.wetnessTrigger}h trigger` : `Below ${risk.wetnessTrigger}h trigger`}
-                    </span>
-                  </div>
-                  <div className="bg-white border border-emerald-100 p-5 rounded-2xl text-center space-y-2 shadow-sm">
-                    <span className="text-xs text-slate-500 font-medium">Avg Temperature</span>
-                    <div className="text-3xl font-extrabold text-amber-600">{temperature}°C</div>
-                    <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold inline-block ${tempInRange ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                      {tempInRange ? `In disease range ${risk.tempRangeMin}–${risk.tempRangeMax}°C` : `Outside disease range`}
-                    </span>
-                  </div>
-                </div>
+                )}
 
-                {/* Overall risk summary */}
-                <div className="bg-white border border-emerald-100 rounded-2xl p-5 shadow-sm flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs text-slate-500 font-medium mb-1">Overall Pathogen Proliferation Risk</p>
-                    <p className="text-sm font-extrabold text-slate-900">{ctx ? risk.primaryDisease : 'Fungal Disease'}</p>
-                    <p className="text-xs text-slate-500 mt-1">Thresholds: Humidity ≥{risk.humidityThreshold}% · Wetness ≥{risk.wetnessTrigger}h · Temp {risk.tempRangeMin}–{risk.tempRangeMax}°C</p>
+                {/* LOADING */}
+                {wxStatus === 'loading' && (
+                  <div className="bg-white border border-emerald-100 rounded-2xl p-10 flex flex-col items-center gap-4 shadow-sm">
+                    <RefreshCw className="w-10 h-10 text-sky-600 animate-spin" />
+                    <p className="text-sm font-semibold text-slate-700">Fetching live weather data...</p>
                   </div>
-                  <span className={`flex-shrink-0 text-sm font-extrabold px-4 py-2 rounded-xl ${riskColor}`}>{riskLevel}</span>
-                </div>
+                )}
+
+                {/* ERROR */}
+                {wxStatus === 'error' && (
+                  <div className="bg-white border border-red-200 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-sm text-center">
+                    <AlertCircle className="w-10 h-10 text-red-500" />
+                    <p className="text-sm font-semibold text-red-700">{wxError}</p>
+                    <button onClick={wxAcquireLocation} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md transition-transform hover:scale-105">
+                      <RefreshCw className="w-3.5 h-3.5" /> Try Again
+                    </button>
+                  </div>
+                )}
+
+                {/* OK — full live weather display */}
+                {wxStatus === 'ok' && wxCurrent && (
+                  <>
+                    {/* Current conditions hero */}
+                    <div className="bg-white border border-emerald-100 rounded-2xl p-6 shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <img src={`https://openweathermap.org/img/wn/${wxCurrent.icon}@2x.png`} alt={wxCurrent.description} className="w-20 h-20 drop-shadow" />
+                          <div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mb-0.5">
+                              <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                              {wxCurrent.city}, {wxCurrent.country}
+                              {wxCoords && <span className="text-slate-400 font-mono text-[10px]">({wxCoords.lat.toFixed(3)}, {wxCoords.lon.toFixed(3)})</span>}
+                            </div>
+                            <div className="text-5xl font-extrabold text-slate-900">{wxCurrent.temp}°C</div>
+                            <div className="text-sm text-slate-500 capitalize mt-0.5">{wxCurrent.description} · Feels like {wxCurrent.feelsLike}°C</div>
+                          </div>
+                        </div>
+                        {risk && (
+                          <div className={`px-5 py-3 rounded-2xl border ${risk.bg} flex flex-col items-center gap-1 min-w-[140px]`}>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{cropRisk.primaryDisease.split('(')[0].trim()} Risk</span>
+                            <span className={`text-xl font-extrabold ${risk.color}`}>{risk.label}</span>
+                            {risk.label !== 'LOW' && <span className="text-[10px] text-center font-semibold text-slate-600">{cropRisk.sprayAlert}</span>}
+                          </div>
+                        )}
+                        <button onClick={() => wxFetchWeather(wxCoords!.lat, wxCoords!.lon)} className="flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-full font-medium transition-colors self-start sm:self-center">
+                          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 8-metric grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Humidity', value: `${wxCurrent.humidity}%`, sub: wxCurrent.humidity >= cropRisk.humidityThreshold ? `⚠ Above ${cropRisk.humidityThreshold}% risk` : 'Normal', icon: '💧', color: wxCurrent.humidity >= cropRisk.humidityThreshold ? 'text-amber-600' : 'text-sky-600' },
+                        { label: 'Wind', value: `${wxCurrent.windSpeed} m/s`, sub: `${windDir(wxCurrent.windDeg)} · ${wxCurrent.windDeg}°`, icon: '🌬️', color: 'text-slate-600' },
+                        { label: 'Pressure', value: `${wxCurrent.pressure} hPa`, sub: wxCurrent.pressure < 1005 ? 'Low — storm possible' : 'Stable', icon: '📊', color: 'text-indigo-600' },
+                        { label: 'Visibility', value: `${wxCurrent.visibility} km`, sub: wxCurrent.visibility < 5 ? 'Poor' : 'Good', icon: '👁️', color: 'text-emerald-600' },
+                        { label: 'Cloud Cover', value: `${wxCurrent.clouds}%`, sub: wxCurrent.clouds >= 80 ? 'Overcast' : wxCurrent.clouds >= 40 ? 'Partly cloudy' : 'Clear', icon: '☁️', color: 'text-slate-500' },
+                        { label: 'Rain (1h)', value: `${wxCurrent.rain1h} mm`, sub: wxCurrent.rain1h > 0 ? '⚠ Leaf wetness risk' : 'Dry', icon: '🌧️', color: wxCurrent.rain1h > 0 ? 'text-amber-600' : 'text-blue-600' },
+                        { label: 'Sunrise', value: fmtTime(wxCurrent.sunrise, wxTz), sub: 'Local time', icon: '🌅', color: 'text-amber-600' },
+                        { label: 'Sunset', value: fmtTime(wxCurrent.sunset, wxTz), sub: 'Local time', icon: '🌇', color: 'text-orange-600' },
+                      ].map(m => (
+                        <div key={m.label} className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+                          <span className="text-lg">{m.icon}</span>
+                          <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">{m.label}</span>
+                          <span className={`text-xl font-extrabold ${m.color}`}>{m.value}</span>
+                          <span className="text-[11px] text-slate-500">{m.sub}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 5-day forecast */}
+                    {daily.length > 0 && (
+                      <div className="bg-white border border-emerald-100 rounded-2xl p-5 shadow-sm">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">5-Day Forecast</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                          {daily.slice(0, 5).map(slot => {
+                            const d = new Date((slot.dt + wxTz) * 1000);
+                            const sr = blastRisk(slot.humidity, slot.temp, slot.pop);
+                            return (
+                              <div key={slot.dt} className={`border rounded-2xl p-4 flex flex-col items-center gap-2 ${sr.bg}`}>
+                                <span className="text-xs font-bold text-slate-700">{dayNames[d.getUTCDay()]}</span>
+                                <img src={`https://openweathermap.org/img/wn/${slot.icon}@2x.png`} alt={slot.description} className="w-12 h-12 drop-shadow" />
+                                <span className="text-lg font-extrabold text-slate-900">{slot.temp}°C</span>
+                                <span className="text-[10px] text-slate-500 capitalize text-center leading-tight">{slot.description}</span>
+                                <div className="flex justify-between w-full text-[10px] text-slate-500">
+                                  <span>💧 {slot.humidity}%</span>
+                                  <span>🌧 {Math.round(slot.pop * 100)}%</span>
+                                </div>
+                                <span className={`text-[10px] font-bold ${sr.color} text-center`}>{sr.label} Risk</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Crop advisory */}
+                    <div className="bg-emerald-900 text-white rounded-2xl p-5 shadow-md">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-300 mb-3">
+                        Crop Advisory — {ctx ? cropRisk.primaryDisease : 'General'} · Live Conditions
+                      </h3>
+                      <div className="text-xs leading-relaxed text-emerald-100 space-y-2">
+                        {wxCurrent.humidity >= cropRisk.humidityThreshold && (
+                          <p>⚠ <strong>Humidity {wxCurrent.humidity}% — above {cropRisk.humidityThreshold}% threshold.</strong> {cropRisk.sprayAlert}.</p>
+                        )}
+                        {wxCurrent.rain1h > 0 && (
+                          <p>🌧 <strong>Active rainfall {wxCurrent.rain1h} mm/hr.</strong> Delay spray. Schedule treatment 6–8 hrs after rain stops.</p>
+                        )}
+                        {wxCurrent.temp >= cropRisk.tempRangeMin && wxCurrent.temp <= cropRisk.tempRangeMax && (
+                          <p>🌡 <strong>Temp {wxCurrent.temp}°C is in the {cropRisk.tempRangeMin}–{cropRisk.tempRangeMax}°C fungal growth range.</strong> {cropRisk.riskNote}.</p>
+                        )}
+                        {wxCurrent.humidity < cropRisk.humidityThreshold && wxCurrent.rain1h === 0 && (
+                          <p>✅ <strong>Low disease pressure today.</strong> Humidity ({wxCurrent.humidity}%) below risk threshold. Continue regular scouting.</p>
+                        )}
+                        {wxCurrent.windSpeed > 5 && (
+                          <p>💨 <strong>Wind {wxCurrent.windSpeed} m/s — avoid spraying.</strong> Wait for below 3 m/s to prevent spray drift.</p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })()}
@@ -2029,135 +2383,25 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <h3 className="font-bold text-sm text-emerald-950 leading-snug">{p.name}</h3>
+                      <p className="text-[11px] text-slate-500 font-medium">Brand: {p.brand}</p>
                       <p className="text-xs text-slate-600 leading-relaxed flex-1">{p.desc}</p>
                       <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
                         <span className="text-slate-500 font-medium">Dosage: </span>
                         <span className="font-bold text-slate-800">{p.dosage}</span>
                       </div>
+                      <div className="flex items-center justify-between gap-2 mt-1">
+                        <span className="text-sm font-extrabold text-emerald-700">{p.price}</span>
+                        <a
+                          href={p.buyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
+                        >
+                          Buy Now →
+                        </a>
+                      </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* TAB 8: Local Farmer Support */}
-          {activeTab === 'support' && (() => {
-            const ctx = savedCropContext;
-            const cropName = ctx?.cropTypeLabel ?? 'your crop';
-            const location = ctx?.location ?? '';
-            const stage = ctx?.growthStage ?? '';
-            const advisoryLines: Record<string, string> = {
-              kannada:  `ನಿಮ್ಮ ${cropName} ಬೆಳೆಗೆ ಸ್ವಾಗತ. ರೋಗ ಪತ್ತೆ ಮತ್ತು ಸಿಂಪಡಣೆ ಸಲಹೆಗಾಗಿ ಕೃಷಿ AI ಸಲಹೆಗಾರನ್ನು ಬಳಸಿ.`,
-              telugu:   `మీ ${cropName} పంటకు స్వాగతం. వ్యాధి గుర్తింపు మరియు పిచికారీ సలహా కోసం AI వ్యవసాయ సలహాదారుని ఉపయోగించండి.`,
-              tamil:    `உங்கள் ${cropName} பயிருக்கு வரவேற்கிறோம். நோய் கண்டறிதல் மற்றும் தெளிப்பு ஆலோசனைக்கு AI வேளாண்மை ஆலோசகரைப் பயன்படுத்துங்கள்.`,
-              marathi:  `तुमच्या ${cropName} पिकाचे स्वागत आहे. रोग ओळख आणि फवारणी सल्ल्यासाठी AI कृषी सल्लागार वापरा.`,
-              odia:     `ଆପଣଙ୍କ ${cropName} ଫସଲକୁ ସ୍ୱାଗତ। ରୋଗ ଚିହ୍ନଟ ଏବଂ ସ୍ପ୍ରେ ପରାମର୍ଶ ପାଇଁ AI କୃଷି ସଲାହକାର ବ୍ୟବହାର କରନ୍ତୁ।`,
-              hindi:    `आपकी ${cropName} फसल में आपका स्वागत है। रोग पहचान और छिड़काव सलाह के लिए AI कृषि सलाहकार का उपयोग करें।`,
-              english:  `Welcome to your ${cropName} advisory${stage ? ` — currently at ${stage} stage` : ''}${location ? ` in ${location}` : ''}. Use the AI Crop Advisor for disease diagnosis and spray guidance.`,
-            };
-            const langKey = selectedLanguage.toLowerCase();
-            const advisory = advisoryLines[langKey] ?? advisoryLines['english'];
-            return (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-emerald-700 via-emerald-800 to-green-800 border border-emerald-600 text-white rounded-2xl p-6 shadow-md">
-                  <div className="flex items-center gap-2 text-emerald-200 text-xs font-bold uppercase tracking-wider mb-1">
-                    <Headphones className="w-4 h-4" />
-                    <span>Multilingual Web Speech STT / TTS</span>
-                  </div>
-                  <h2 className="text-2xl font-extrabold text-white tracking-tight">Local Farmer Support &amp; Vernacular Voice</h2>
-                  <p className="text-xs text-emerald-100 mt-1 max-w-2xl leading-relaxed">
-                    {ctx
-                      ? `Voice-first advisory for ${ctx.cropTypeLabel}${stage ? ` at ${stage} stage` : ''}${location ? ` · ${location}` : ''}.`
-                      : 'Voice-first advisory supporting Kannada, Telugu, Tamil, Marathi, Odia, Hindi, and English.'}
-                  </p>
-                </div>
-
-                {!ctx && (
-                  <div className="bg-white border border-amber-200 rounded-2xl p-5 flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-700">Advisory is generic — save crop details to personalise it.</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Save your crop & land details in Tab 01 for a tailored voice advisory.</p>
-                    </div>
-                    <button onClick={() => setActiveTab('cropdetails')} className="flex-shrink-0 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition-colors">Fill Details</button>
-                  </div>
-                )}
-
-                {/* Crop context summary strip */}
-                {ctx && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                      { label: 'Crop', value: ctx.cropTypeLabel },
-                      { label: 'Stage', value: stage || '—' },
-                      { label: 'Area', value: ctx.landAcres ? `${ctx.landAcres} acres` : '—' },
-                      { label: 'Location', value: location || '—' },
-                    ].map((item, i) => (
-                      <div key={i} className="bg-white border border-emerald-100 rounded-xl px-3 py-2.5 shadow-sm">
-                        <p className="text-[10px] text-slate-400 font-mono uppercase">{item.label}</p>
-                        <p className="text-xs font-bold text-emerald-950 truncate mt-0.5">{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="bg-white border border-emerald-100 p-6 rounded-2xl shadow-sm space-y-5">
-                  {/* Language selector */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                    <span className="text-xs font-bold text-slate-800">Select Advisory Language</span>
-                    <select
-                      value={selectedLanguage}
-                      onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="bg-slate-50 border border-slate-300 text-xs font-semibold rounded-xl px-4 py-2 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    >
-                      <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
-                      <option value="Telugu">Telugu (తెలుగు)</option>
-                      <option value="Tamil">Tamil (தமிழ்)</option>
-                      <option value="Marathi">Marathi (मराठी)</option>
-                      <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
-                      <option value="Hindi">Hindi (हिन्दी)</option>
-                      <option value="English">English</option>
-                    </select>
-                  </div>
-
-                  {/* Advisory text preview */}
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-                    <p className="text-[10px] text-emerald-600 font-mono uppercase tracking-wide mb-1">Advisory Preview — {selectedLanguage}</p>
-                    <p className="text-sm text-emerald-950 leading-relaxed">{advisory}</p>
-                  </div>
-
-                  {/* Voice panel */}
-                  <div className="bg-emerald-50/80 border border-emerald-200 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/30 flex-shrink-0">
-                        <Volume2 className="w-6 h-6 animate-pulse" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-extrabold text-emerald-950">Voice Advisory Assistant</h4>
-                        <p className="text-xs text-emerald-800 font-medium">
-                          Active Language: {selectedLanguage}
-                          {ctx ? ` · ${ctx.cropTypeLabel}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if ('speechSynthesis' in window) {
-                          window.speechSynthesis.cancel();
-                          const utter = new SpeechSynthesisUtterance(advisory);
-                          const localeMap: Record<string, string> = {
-                            kannada: 'kn-IN', telugu: 'te-IN', tamil: 'ta-IN',
-                            marathi: 'mr-IN', odia: 'or-IN', hindi: 'hi-IN', english: 'en-IN',
-                          };
-                          utter.lang = localeMap[langKey] ?? 'en-IN';
-                          window.speechSynthesis.speak(utter);
-                        }
-                      }}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-transform hover:scale-105 flex-shrink-0"
-                    >
-                      ▶ Listen Voice Advisory
-                    </button>
-                  </div>
                 </div>
               </div>
             );
