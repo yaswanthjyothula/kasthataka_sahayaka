@@ -951,7 +951,6 @@ Your job:
         >
           <div className="px-2 pt-1">
             <h2 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Dashboard Navigation</h2>
-            <p className="text-[11px] text-emerald-700">Finger Millet Protection Suite</p>
           </div>
 
           <nav className="flex-1 flex flex-col gap-1.5">
